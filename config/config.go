@@ -17,17 +17,17 @@ var (
 )
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Default Usage of ./xxx -c dingtalk.yaml\n")
+	fmt.Fprintf(os.Stderr, "Default Usage of ./xxx -c config.yaml\n")
 	flag.PrintDefaults()
 }
 
 func initConfig() {
 	flag.StringVar(&Port, "port", "5000", "监听的端口，default :5000")
-	flag.StringVar(&fileName, "c", "", "配置文件名或路径 , 默认 dingtalk.yaml")
+	flag.StringVar(&fileName, "c", "config.yaml", "配置文件名或路径 , 默认 config.yaml")
 	flag.BoolVar(&h, "h", true, "  help  ")
 	flag.Usage = usage
 	flag.Parse()
-	if fileName != "" {
+	if fileName != "config.yaml" {
 		h = false
 	} else {
 		flag.Usage()
@@ -35,7 +35,8 @@ func initConfig() {
 	Viper = viper.New()
 	Viper.SetConfigFile(fileName)
 	if err := Viper.ReadInConfig(); err != nil {
-		panic(err)
+		os.Exit(2)
+		// panic(err)
 	}
 
 }

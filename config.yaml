@@ -4,17 +4,17 @@
 #  /yearning   yearning工单提醒转发到钉钉机器人群组（实现了多个群发送工单提醒需要配置文件配置钉钉的webhook地址）
 
 dingtalk:
-- job: "xxx"
-  url: "https://oapi.dingtalk.com/robot/send?access_token=xxxx"
-  secret: "xxx"
-- job: "xxx"
+- job: "paixx"
+  url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+  secret: "sss"
+- job: "yinxx"
   url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
   secret: "xxx"
 
 
 yearning:
+- url: "https://oapi.dingtalk.com/robot/send?access_token=xx"
+  secret: "xx"
 - url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
-  secret: "xxxx"
-- url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
-  secret: "xxxx"
+  secret: "xxx"
   
