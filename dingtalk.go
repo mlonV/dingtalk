@@ -11,5 +11,4 @@ func main() {
 
 	r := route.RegisterRoutes()
 	r.Run(":" + config.Port)
-
 }

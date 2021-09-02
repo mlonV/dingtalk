@@ -3,7 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
-	// "log"
+
 	"os"
 
 	"github.com/spf13/viper"

@@ -10,6 +10,12 @@ func RegisterRoutes() *gin.Engine {
 
 	alertController := &controller.AlterController{}
 	router.GET("/", alertController.GetIndex)
+	router.POST("/", alertController.GetIndex)
+
 	router.POST("/sendmsg", alertController.SendMsg)
+
+	yearningController := &controller.YearningController{}
+	router.POST("/yearning", yearningController.SendYearning)
+
 	return router
 }

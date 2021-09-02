@@ -4,9 +4,24 @@ type Text struct {
 	Content string `json:"content,omitempty"`
 }
 
+// 发送钉钉消息格式 Msg  josn格式模板
+// message = """{
+//     "at": {
+//         "atMobiles":[
+//             "15555555555"
+//         ],
+//         "isAtAll": false
+//     },
+//     "text": {
+//         "content":"test"
+//     },
+//     "msgtype":"text"
+// }"""
+// 发送钉钉消息格式 Msg
 type Msg struct {
-	Msgtype string `json:"msgtype,omitempty"`
-	Text    Text   `json:"text,omitempty"`
+	Msgtype string                 `json:"msgtype,omitempty"`
+	At      map[string]interface{} `json:"at,omitempty"`
+	Text    `json:"text,omitempty"`
 }
 
 // alertmanager 官方接口发送数据的类型
