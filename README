@@ -1,0 +1,29 @@
+#可用两个POST接口
+#alertmanager告警接口： http://127.0.0.1:5000/sendmsg
+#yearning工单通知接口： http://127.0.0.1:5000/yearning
+
+
+直接go build dingtalk.go即可生成二进制可执行文件
+
+快速启动： ./dingtalk -c config.yaml
+#指定端口  -port 8080 不指定默认5000
+
+
+
+配置文件：config.yaml
+#钉钉通知群组的配置，根据job选择群组发送告警（job和prometheus job名相同）
+#暂不支持 一个job发送多个群组，不支持@功能.
+dingtalk:
+- job: "jobname"
+  url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+  secret: "xxxx"
+- job: "jobname1"
+  url: "https://oapi.dingtalk.com/robot/send?access_token=xx"
+  secret: "xxx"
+
+#yearning webhook地址只能发送一个群组，webhook使用此脚本地址用来配置多群组转发。
+yearning:
+- url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+  secret: "xxx"
+- url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+  secret: "xxx"
