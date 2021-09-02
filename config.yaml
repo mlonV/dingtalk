@@ -4,17 +4,17 @@
 #  /yearning   yearning工单提醒转发到钉钉机器人群组（实现了多个群发送工单提醒需要配置文件配置钉钉的webhook地址）
 
 dingtalk:
-- job: "paipai"
-  url: "https://oapi.dingtalk.com/robot/send?access_token=54b3c0269865323ddea151b03e2bc9898dad74ce5239e9364b5f3bad9ec3fb33"
-  secret: "SECc3f980869d462e06ac0fef440ab83f633e9aee16531247a9361462e22559e815"
-- job: "yinyu"
-  url: "https://oapi.dingtalk.com/robot/send?access_token=54b5fb0938a0c18f947e6fd317dcbafa5ebb7396d5aa66d9ee2ff64bf56d577a"
-  secret: "SEC7819711b514efda578ee038cb89d11ae1ff9221a75ef93ef84b69e33e7cdf5c5"
+- job: "xxx"
+  url: "https://oapi.dingtalk.com/robot/send?access_token=xxxx"
+  secret: "xxx"
+- job: "xxx"
+  url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+  secret: "xxx"
 
 
 yearning:
-- url: "https://oapi.dingtalk.com/robot/send?access_token=54b3c0269865323ddea151b03e2bc9898dad74ce5239e9364b5f3bad9ec3fb33"
-  secret: "SECc3f980869d462e06ac0fef440ab83f633e9aee16531247a9361462e22559e815"
-- url: "https://oapi.dingtalk.com/robot/send?access_token=54b5fb0938a0c18f947e6fd317dcbafa5ebb7396d5aa66d9ee2ff64bf56d577a"
-  secret: "SEC7819711b514efda578ee038cb89d11ae1ff9221a75ef93ef84b69e33e7cdf5c5"
+- url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+  secret: "xxxx"
+- url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+  secret: "xxxx"
   
