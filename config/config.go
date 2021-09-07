@@ -29,7 +29,6 @@ func initConfig() {
 	flag.Parse()
 	if fileName != "config.yaml" {
 		h = false
-	} else {
 		flag.Usage()
 	}
 	Viper = viper.New()
