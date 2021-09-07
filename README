@@ -11,19 +11,38 @@
 
 
 配置文件：config.yaml
-#钉钉通知群组的配置，根据job选择群组发送告警（job和prometheus job名相同）
-#暂不支持 一个job发送多个群组，不支持@功能.
-dingtalk:
-- job: "jobname"
-  url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
-  secret: "xxxx"
-- job: "jobname1"
-  url: "https://oapi.dingtalk.com/robot/send?access_token=xx"
-  secret: "xxx"
+#地址后缀: 
+#  /sendmsg   prometheus/alertmanager发送webhook地址
+#  /yearning   yearning工单提醒转发到钉钉机器人群组（实现了多个群发送工单提醒需要配置文件配置钉钉的webhook地址）
+# 
 
-#yearning webhook地址只能发送一个群组，webhook使用此脚本地址用来配置多群组转发。
+#isAtAll 为@全体，为true时 手机号就不生效
+
+# 添加机器人配置，dingding机器人的url和secret，根据prometheus的job名来分组发送告警
+#从alertmanager接收转发的请求地址
+alertmanager:
+  - job: "xxx"
+    url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+    secret: "xxx"
+    AtMobiles: ["132xxxxxxxx"]
+    isAtAll: false
+  - job: "xxx2"
+    url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+    secret: "xxx"
+    AtMobiles: ["155xxxxxxxx"]
+    isAtAll: true
+
+
+# 添加机器人配置，dingding机器人的url和secret .
+#从yearning接收消息转发的地址
 yearning:
-- url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
-  secret: "xxx"
-- url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
-  secret: "xxx"
+  # sql审计
+  - url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+    secret: "xxx"
+    AtMobiles: ["155xxxxxxxx"]
+    isAtAll: true
+  #测试群
+  - url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+    secret: "xxx"
+    atMobiles: ["155xxxxxxxx","132xxxxxxxx"]
+    isAtAll: false #是否at全体
