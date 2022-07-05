@@ -46,3 +46,18 @@ yearning:
     secret: "xxx"
     atMobiles: ["155xxxxxxxx","132xxxxxxxx"]
     isAtAll: false #是否at全体
+
+#es根据索引和数据的数量告警
+esalarm:
+  #"elastic", "abcd1234!"
+  isOpen: false      #是否开启这个功能
+  user: "elastic"    #连接es的用户名
+  pass: "abcd1234!"  #连接es的密码
+  hosts: ["http://x.x.x.x:9200"]  #连接es的地址
+  indexfield: "message"  #查询用的字段
+  index: "phplog_def*"   #索引名
+  logKey: "*DEBUG*"      #匹配的信息
+  #1分钟超过10条告警，默认告警到alartmanager
+  num: 10  #多少条
+  time: 1 #多久内 ，默认分钟
+  sendMsgNum: 2  #选出多少条信息发送到钉钉
