@@ -9,9 +9,9 @@
 #从alertmanager接收转发的请求地址
 alertmanager:
   - job: "elkalarm"
-    url: "https://oapi.dingtalk.com/robot/send?access_token=6029ffdcc2d731f25ba5b48e5390aefbecf3d63118bc38dab8ecfd19cfbd8bcd"
-    secret: "SECf1d9ee103aa58f7052098b180ecd65a2b50fd8860f1ba306787755e1ee6b5f84"
-    AtMobiles: ["15515787648"]
+    url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+    secret: "xxx"
+    AtMobiles: ["155xxxxxxx"]
     isAtAll: false
 
 
