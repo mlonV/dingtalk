@@ -1,0 +1,50 @@
+#地址后缀: 
+#  /sendmsg   prometheus/alertmanager发送webhook地址
+#  /yearning   yearning工单提醒转发到钉钉机器人群组（实现了多个群发送工单提醒需要配置文件配置钉钉的webhook地址）
+# 
+
+#isAtAll 为@全体，为true时 手机号就不生效
+
+# 添加机器人配置，dingding机器人的url和secret，根据prometheus的job名来分组发送告警
+#从alertmanager接收转发的请求地址
+alertmanager:
+  - job: "elkalarm"
+    url: "https://oapi.dingtalk.com/robot/send?access_token=6029ffdcc2d731f25ba5b48e5390aefbecf3d63118bc38dab8ecfd19cfbd8bcd"
+    secret: "SECf1d9ee103aa58f7052098b180ecd65a2b50fd8860f1ba306787755e1ee6b5f84"
+    AtMobiles: ["15515787648"]
+    isAtAll: false
+
+
+# 添加机器人配置，dingding机器人的url和secret .
+#从yearning接收消息转发的地址
+yearning:
+  # sql审计
+  - url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+    secret: "xxx"
+    AtMobiles: ["155xxxxxxxx"]
+    isAtAll: true
+  #测试群
+  - url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+    secret: "xxx"
+    atMobiles: ["155xxxxxxxx","132xxxxxxxx"]
+    isAtAll: false #是否at全体
+  
+#es根据索引和数据的数量告警
+esalarm:
+  isOpen: true      #是否开启这个功能
+  user: ""    #连接es的用户名
+  pass: ""  #连接es的密码
+  hosts: ["http://xxxx:9200"]  #连接es的地址
+  index: "phplog_def*"   #索引名
+  # 查询
+  indexfield: "message"  #查询用的字段
+  logKey: "INFO"      #匹配的信息
+  #1分钟超过10条告警，默认告警到alartmanager
+  #时间筛选字段（有的是timestamp 有的是@timestamp
+  timefield: "timestamp"
+  num: 1000  #多少条
+  time: 1 #多久内 ，默认分钟
+  sendMsgNum: 2  #选出多少条信息发送到钉钉
+  # 查询es的间隔 , 重复告警的时间（单位秒）
+  interval: 20
+  repeatinterval: 360 

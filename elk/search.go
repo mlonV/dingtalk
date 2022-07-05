@@ -56,14 +56,18 @@ func init() {
 func count() {
 	// res, err := esClient.Search("phplog_6").Do(context.Background())
 
-	timenow := time.Now().Format("2006-01-02 15:04:05.000")
-	timebefore := time.Now().Add(time.Minute * -time.Duration(esalarm.Time)).Format("2006-01-02 15:04:05.000")
-	// fmt.Println(timenow, timebefore)
-	q := elastic.NewWildcardQuery(esalarm.IndexField, esalarm.LogKey).Boost(1.2)
+	timenow := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+	timebefore := time.Now().UTC().Add(time.Minute * -time.Duration(esalarm.Time)).Format("2006-01-02T15:04:05.000Z")
+	fmt.Println(timenow, timebefore)
 	bq := elastic.NewBoolQuery()
-	bq.Must(q)
-	bq.Filter(elastic.NewRangeQuery("timestamp").Gt(timebefore).Lt(timenow).Format("uuuu-MM-dd HH:mm:ss.SSS").TimeZone("+08:00"))
-	res, err := esClient.Search(esalarm.Index).Query(bq).Do(context.Background())
+	bq.Must(
+		elastic.NewMatchQuery(esalarm.IndexField, esalarm.LogKey),
+		elastic.NewRangeQuery(esalarm.TimeField).Gt(timebefore).Lt(timenow).Format("strict_date_optional_time||epoch_millis").TimeZone("+08:00"),
+	)
+	// bq.Must(elastic.NewRangeQuery("timestamp").Gt(timebefore).Lt(timenow).Format("strict_date_optional_time||epoch_millis"))
+
+	// 默认只查询两条
+	res, err := esClient.Search(esalarm.Index).Size(2).Query(bq).Do(context.Background())
 	// res, err := esClient.Search("phplog_deflector").Query(bq).Do(context.Background())
 	if err != nil {
 		panic(err)
@@ -74,6 +78,12 @@ func count() {
 		alarm(res)
 	}
 	fmt.Printf("%v", res.Hits.TotalHits)
+
+	var ess EsSource
+	for _, item := range res.Each(reflect.TypeOf(ess)) {
+		t := item.(EsSource)
+		fmt.Printf("%#v \n", t)
+	}
 }
 
 // 告警
@@ -126,7 +136,7 @@ func alarm(res *elastic.SearchResult) {
 		// 真正发送消息的地方
 		body, err := utils.SendMsg(sendurl, data)
 		// 静默5分钟
-		time.Sleep(60 * time.Second)
+		time.Sleep(time.Duration(esalarm.RepeatInterval) * time.Second)
 
 		if err != nil {
 			log.Fatal("send dingtalk err : ", err)
@@ -139,7 +149,7 @@ func alarm(res *elastic.SearchResult) {
 func Ticker() {
 	// interval := time.Duration(esalarm.Time) * time.Minute
 	if esalarm.IsOpen {
-		interval := time.Second * 5
+		interval := time.Second * time.Duration(esalarm.Interval)
 		ticker = time.NewTicker(interval)
 
 		// 定时任务处理逻辑
