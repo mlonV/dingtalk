@@ -21,12 +21,15 @@ var err error
 var esalarm *config.ESconfig
 var ticker *time.Ticker
 
+// 写死的message
 type EsSource struct {
-	Message string `json:"message"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
 }
 
 func init() {
 	// 解析配置文件到 结构体变量
+	fmt.Printf("%#v", esalarm)
 	config.Viper.Unmarshal(&esalarm)
 	eslog = log.New(os.Stdout, "[ElasticLog] ", log.LstdFlags)
 	esClient, err = elastic.NewClient(
@@ -53,74 +56,71 @@ func init() {
 	}
 }
 
-func count() {
-	// res, err := esClient.Search("phplog_6").Do(context.Background())
-
+// Query ERROR
+func query(ql config.Query, esC *elastic.Client) {
+	fmt.Printf("%#v \n", ql)
 	timenow := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-	timebefore := time.Now().UTC().Add(time.Minute * -time.Duration(esalarm.Time)).Format("2006-01-02T15:04:05.000Z")
-	fmt.Println(timenow, timebefore)
+	timebefore := time.Now().UTC().Add(time.Minute * -time.Duration(ql.TimeRange)).Format("2006-01-02T15:04:05.000Z")
 	bq := elastic.NewBoolQuery()
-	bq.Must(
-		elastic.NewMatchQuery(esalarm.IndexField, esalarm.LogKey),
-		elastic.NewRangeQuery(esalarm.TimeField).Gt(timebefore).Lt(timenow).Format("strict_date_optional_time||epoch_millis").TimeZone("+08:00"),
-	)
-	// bq.Must(elastic.NewRangeQuery("timestamp").Gt(timebefore).Lt(timenow).Format("strict_date_optional_time||epoch_millis"))
+
+	// matchQuery := elastic.NewMatchQuery(ql.IndexField, ql.LogKey)
+	phraseQuery := elastic.NewMatchPhraseQuery(ql.IndexField, ql.LogKey)
+	rangeQuery := elastic.NewRangeQuery(ql.TimeField).Gt(timebefore).Lt(timenow).Format("strict_date_optional_time||epoch_millis").TimeZone("+08:00")
+	// termsQuery := elastic.NewTermQuery(ql.IndexField, ql.LogKey)
+	bq.Must(rangeQuery, phraseQuery)
 
 	// 默认只查询两条
-	res, err := esClient.Search(esalarm.Index).Size(2).Query(bq).Do(context.Background())
-	// res, err := esClient.Search("phplog_deflector").Query(bq).Do(context.Background())
+	if ql.SendMsgNum == 0 {
+		ql.SendMsgNum = 2
+	}
+	res, err := esC.Search(ql.Index).Size(int(ql.SendMsgNum)).Query(bq).Do(context.Background())
 	if err != nil {
 		panic(err)
 	}
-
 	// 超过数量就告警
-	if res.Hits.TotalHits.Value >= esalarm.Num {
-		alarm(res)
+	if res.Hits.TotalHits.Value >= ql.Num {
+		alarm(res, ql)
 	}
-	fmt.Printf("%v", res.Hits.TotalHits)
+	fmt.Printf("时间范围内: [%v,%v] 查询内容: %s ,查询条数%d \n",
+		timebefore,
+		timenow,
+		ql.LogKey,
+		res.Hits.TotalHits.Value,
+	)
 
-	var ess EsSource
-	for _, item := range res.Each(reflect.TypeOf(ess)) {
-		t := item.(EsSource)
-		fmt.Printf("%#v \n", t)
-	}
+	// var ess EsSource
+	// for _, item := range res.Each(reflect.TypeOf(ess)) {
+	// 	t := item.(EsSource)
+	// 	fmt.Printf("\n --  --  -- \n%#v \n\n\n", t)
+	// }
 }
 
 // 告警
-func alarm(res *elastic.SearchResult) {
+func alarm(res *elastic.SearchResult, ql config.Query) {
 	msgList := []string{
-		fmt.Sprintf("告警名 : ELK log %s", esalarm.LogKey),
-		fmt.Sprintf("告警内容: %s 超过告警阈值%d条", esalarm.LogKey, esalarm.Num),
-		fmt.Sprintf("%d分钟内%s数量: %d", esalarm.Time, esalarm.LogKey, res.Hits.TotalHits.Value),
-		fmt.Sprintf("信息如下[%d]条 : ", esalarm.SendMsgNum),
+		fmt.Sprintf("告警名 : ELK log %s", ql.LogKey),
+		fmt.Sprintf("告警内容: %s 超过告警阈值%d条", ql.LogKey, ql.Num),
+		fmt.Sprintf("%d分钟内%s数量: %d", ql.TimeRange, ql.LogKey, res.Hits.TotalHits.Value),
+		fmt.Sprintf("信息如下[%d]条 : ", ql.SendMsgNum),
 	}
 
 	// 发送告警
-	AlertmanagerFileConf := &config.AlertmanagerFileConf{}
-	config.Viper.Unmarshal(&AlertmanagerFileConf)
-	for _, confList := range AlertmanagerFileConf.Alertmanager {
-		confSecret := confList.Secret
-		confUrl := confList.Url
+	for _, dinggroup := range ql.DingGroup {
+		dingurl := dinggroup.DingURL
+		dingsecret := dinggroup.Dingsecret
 
-		sendurl := utils.GetSendUrl(confUrl, confSecret)
+		sendurl := utils.GetSendUrl(dingurl, dingsecret)
 		sendAlertMsg := strings.Join(msgList, "\n")
 
 		// 在添加两条message索引里的消息
 		// 遍历每个值
 		var ess EsSource
 		for k, item := range res.Each(reflect.TypeOf(ess)) {
-			if k < int(esalarm.SendMsgNum) {
+			if k < int(ql.SendMsgNum) {
 				sendAlertMsg += fmt.Sprintf("\n%s", item.(EsSource))
 			}
 			// t := item.(EsSource)
 			// fmt.Printf("%#v \n", t)
-		}
-
-		// 如果有@全体，则不单独@个人(需要吧@+手机号写入到发送的信息里，有at全体的话则不生效)
-		if !confList.IsAtAll {
-			for _, v := range confList.AtMobiles {
-				sendAlertMsg += fmt.Sprintf(", @%s ", v)
-			}
 		}
 
 		// DingData := &config.Msg{Msgtype: "text", At: config.At{AtMobiles: confList.AtMobiles}, Text: config.Text{Content: sendAlertMsg}}
@@ -128,43 +128,46 @@ func alarm(res *elastic.SearchResult) {
 		// 发送钉钉数据的结构
 		DingData := &config.Msg{}
 		DingData.Msgtype = "text"
-		DingData.At.AtMobiles = confList.AtMobiles
-		DingData.At.IsAtAll = confList.IsAtAll
 		DingData.Text.Content = sendAlertMsg
 
 		data, _ := json.Marshal(DingData)
 		// 真正发送消息的地方
 		body, err := utils.SendMsg(sendurl, data)
-		// 静默5分钟
-		time.Sleep(time.Duration(esalarm.RepeatInterval) * time.Second)
-
 		if err != nil {
 			log.Fatal("send dingtalk err : ", err)
 		}
 		fmt.Println(string(body))
 	}
+	// 静默5分钟
+	time.Sleep(time.Duration(ql.RepeatInterval) * time.Second)
 }
 
 // 定时器
 func Ticker() {
 	// interval := time.Duration(esalarm.Time) * time.Minute
-	if esalarm.IsOpen {
-		interval := time.Second * time.Duration(esalarm.Interval)
-		ticker = time.NewTicker(interval)
+	for _, ql := range esalarm.QueryList {
 
-		// 定时任务处理逻辑
-		for {
-			// 调用Reset方法对timer对象进行定时器重置
-			// 	ticker.Reset(interval)
-			<-ticker.C
-			count()
-		}
+		go func(ql config.Query) {
+			if esalarm.IsOpen {
+				interval := time.Second * time.Duration(ql.Interval)
+				ticker = time.NewTicker(interval)
+
+				// 定时任务处理逻辑
+				for {
+					// 调用Reset方法对timer对象进行定时器重置
+					// 	ticker.Reset(interval)
+					<-ticker.C
+					query(ql, esClient)
+				}
+			}
+		}(ql)
 	}
+
 	// ticker.Stop()
 }
 
 // func main() {
 // 	result, err := esClient.ElasticsearchVersion("http://192.168.103.113:9200")
 // 	eslog.Println(result, err)
-// 	Timer()
+// 	Ticker()
 // }

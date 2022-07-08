@@ -47,22 +47,39 @@ yearning:
     atMobiles: ["155xxxxxxxx","132xxxxxxxx"]
     isAtAll: false #是否at全体
 
-#es根据索引和数据的数量告警 发送alertmanager组的消息通道
+#es根据索引和数据的数量告警
 esalarm:
   isOpen: true      #是否开启这个功能
   user: ""    #连接es的用户名
   pass: ""  #连接es的密码
-  hosts: ["http://xxxx:9200"]  #连接es的地址
-  index: "phplog_def*"   #索引名
+  hosts: ["http://192.168.103.113:9200"]  #连接es的地址
   # 查询
-  indexfield: "message"  #查询用的字段
-  logKey: "INFO"      #匹配的信息
-  #1分钟超过10条告警，默认告警到alartmanager
-  #时间筛选字段（有的是timestamp 有的是@timestamp
-  timefield: "timestamp"
-  num: 1000  #多少条
-  time: 1 #多久内 ，默认分钟
-  sendMsgNum: 2  #选出多少条信息发送到钉钉
-  # 查询es的间隔 , 重复告警的时间（单位秒）
-  interval: 20
-  repeatinterval: 360 
+  querylist:
+  - index: "phplog_def*"   #索引名
+    indexfield: "message"  #查询用的字段
+    logKey: "INFO"      #匹配的信息  使用了es的PhraseQuery
+    #时间筛选字段（有的是timestamp 有的是@timestamp
+    timefield: "timestamp"
+    num: 10  #时间范围内，超过多少条就告警
+    timerange: 1 #多久内 ，默认分钟(当前时间到前一分钟)  #时间格式format:"strict_date_optional_time||epoch_millis"
+    sendMsgNum: 2  #选出多少条信息发送到钉钉
+    # 查询es的间隔 , 重复告警的时间（单位秒）
+    interval: 10
+    repeatinterval: 360 
+    dinggroup:   #钉钉通知组
+      - dingurl: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+        dingsecret: "xxx"
+  - index: "phplog_def*"   #索引名
+    indexfield: "message"
+    logKey: "apple notify data"
+    timefield: "timestamp"
+    num: 1
+    timerange: 1 
+    sendMsgNum: 1  
+    interval: 10
+    repeatinterval: 360
+    dinggroup:
+      # - dingurl: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+      #   dingsecret: "xxx"
+      # - dingurl: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+      #   dingsecret: "xxx"
