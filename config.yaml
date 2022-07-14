@@ -32,8 +32,8 @@ yearning:
 #es根据索引和数据的数量告警
 esalarm:
   isOpen: true      #是否开启这个功能
-  user: ""    #连接es的用户名
-  pass: ""  #连接es的密码
+  user: "elastic"    #连接es的用户名
+  pass: "abcd1234!"  #连接es的密码
   hosts: ["http://192.168.103.113:9200"]  #连接es的地址
   # 查询
   querylist:
