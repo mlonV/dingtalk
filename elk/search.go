@@ -64,10 +64,17 @@ func query(ql config.Query, esC *elastic.Client) {
 	bq := elastic.NewBoolQuery()
 
 	// matchQuery := elastic.NewMatchQuery(ql.IndexField, ql.LogKey)
-	phraseQuery := elastic.NewMatchPhraseQuery(ql.IndexField, ql.LogKey)
 	rangeQuery := elastic.NewRangeQuery(ql.TimeField).Gt(timebefore).Lt(timenow).Format("strict_date_optional_time||epoch_millis").TimeZone("+08:00")
+
+	mustBQ := elastic.NewBoolQuery()
+
+	for _, v := range ql.LogKey {
+
+		mustBQ.Must(elastic.NewMatchPhraseQuery(ql.IndexField, v))
+	}
+
 	// termsQuery := elastic.NewTermQuery(ql.IndexField, ql.LogKey)
-	bq.Must(rangeQuery, phraseQuery)
+	bq.Must(rangeQuery, mustBQ)
 
 	// 默认只查询两条
 	if ql.SendMsgNum == 0 {

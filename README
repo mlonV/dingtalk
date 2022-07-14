@@ -57,7 +57,7 @@ esalarm:
   querylist:
   - index: "phplog_def*"   #索引名
     indexfield: "message"  #查询用的字段
-    logKey: "INFO"      #匹配的信息  使用了es的PhraseQuery
+    logKey: ["INFO"]      #匹配的信息  使用了es的PhraseQuery
     #时间筛选字段（有的是timestamp 有的是@timestamp
     timefield: "timestamp"
     num: 10  #时间范围内，超过多少条就告警
@@ -71,7 +71,7 @@ esalarm:
         dingsecret: "xxx"
   - index: "phplog_def*"   #索引名
     indexfield: "message"
-    logKey: "apple notify data"
+    logKey: ["apple notify data"]
     timefield: "timestamp"
     num: 1
     timerange: 1 

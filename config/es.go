@@ -16,7 +16,7 @@ type ESAlarm struct {
 type Query struct {
 	Index          string       `json:"index"`          //"xaas*" #根据kibana前缀匹配的索引 xaax*
 	IndexField     string       `json:"indexfield"`     //索引中的字段
-	LogKey         string       `json:"logKey"`         //"ERROR"  #
+	LogKey         []string     `json:"logKey"`         //"ERROR"  #
 	TimeField      string       `json:"timefield"`      //索引时间段的字段名
 	Num            int64        `json:"num"`            //#数量
 	TimeRange      int64        `json:"timerange"`      // 时间范围
