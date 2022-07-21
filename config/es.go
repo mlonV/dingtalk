@@ -2,7 +2,8 @@ package config
 
 // es告警struct
 type ESconfig struct {
-	ESAlarm `yaml:"esalarm"`
+	ESAlarm     `yaml:"esalarm"`
+	AlarmStatus //告警状态
 }
 
 type ESAlarm struct {
@@ -19,14 +20,23 @@ type Query struct {
 	LogKey         []string     `json:"logKey"`         //"ERROR"  #
 	TimeField      string       `json:"timefield"`      //索引时间段的字段名
 	Num            int64        `json:"num"`            //#数量
-	TimeRange      int64        `json:"timerange"`      // 时间范围
+	TimeRange      int64        `json:"timerange"`      //时间范围
 	SendMsgNum     int64        `json:"sendMsgNum"`     //发送消息数量
 	Interval       int64        `json:"interval"`       //查询es的间隔
 	RepeatInterval int64        `json:"repeatinterval"` //重复告警间隔
+	IsResolved     bool         `json:"isresolved"`     //是否发送恢复通知
 	DingGroup      []DingNotify `json:"dinggroup"`      //钉钉告警组
 }
 
 type DingNotify struct {
 	DingURL    string `json:"dingurl"`
 	Dingsecret string `json:"dingsecret"`
+}
+
+// 告警的发送和恢复通知处理
+type AlarmStatus struct {
+	AlarmCount int64
+	StartTime  string
+	EndTime    string
+	IsAlarm    bool // 当前是否在告警
 }
