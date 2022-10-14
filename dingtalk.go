@@ -23,7 +23,7 @@ func main() {
 
 	// 启动监控docker 内进程的监控
 	if config.Conf.MonitorDocker.IsOpen {
-		log.Println("开启docker Monitor 功能 ，isopen: ", config.Conf.ESAlarm.IsOpen)
+		log.Println("开启docker Monitor 功能 ，isopen: ", config.Conf.MonitorDocker.IsOpen)
 		go der.Ticker()
 	}
 

@@ -80,12 +80,13 @@ func Worker() {
 	for _, host := range dm.Hosts {
 		// 获取dockercli
 		dockerCli, err := utils.NewDockerCli(dm.Username, host, fmt.Sprint(dm.Port))
+		dockerCli.ClientVersion()
 		if err != nil {
 			log.Println(err.Error())
 		}
 		// 获取到容器id和ProcessStatus的对应的map
 		// 先从dMap里面拿，拿不到传个新的进去
-
+		log.Printf("开始遍历%s所有的容器clientversion : %s", host, dockerCli.ClientVersion())
 		GetRunningDockerInfo(dockerCli, host)
 		if err != nil {
 			log.Println(err.Error())
