@@ -10,10 +10,11 @@ import (
 )
 
 var (
-	Viper    *viper.Viper
+	vp       *viper.Viper
 	fileName string
 	Port     string
 	h        bool
+	Conf     *DingtalkConfig
 )
 
 func usage() {
@@ -31,12 +32,14 @@ func initConfig() {
 		h = false
 		flag.Usage()
 	}
-	Viper = viper.New()
-	Viper.SetConfigFile(fileName)
-	if err := Viper.ReadInConfig(); err != nil {
+	vp = viper.New()
+	vp.SetConfigFile(fileName)
+	if err := vp.ReadInConfig(); err != nil {
+		println(err.Error())
 		os.Exit(2)
 		// panic(err)
 	}
+	vp.Unmarshal(&Conf)
 
 }
 

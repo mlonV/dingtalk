@@ -65,3 +65,16 @@ esalarm:
       #   dingsecret: "xxx"
       # - dingurl: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
       #   dingsecret: "xxx"
+
+
+#监控容器内进程相关参数
+monitordocker:
+  #连接服务器使用密钥
+  username: "root"
+  port: 22
+  interval: 5  #单位秒
+  hosts: ["192.168.103.107"]  #主机列表，遍历主机监控上面的容器内进程
+  process: "/work/code"
+
+  #pid监控多少秒正常
+  num: 100
