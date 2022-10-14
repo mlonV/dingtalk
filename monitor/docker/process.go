@@ -125,17 +125,27 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 					ps.PromeGauge = prometheus.NewGauge(prometheus.GaugeOpts{
 						Namespace: "victory",
 						Subsystem: "go",
-						Name:      ps.ContainerName,
+						Name:      "alive",
 						Help:      "容器内进程存活指标 is Alive",
+						ConstLabels: map[string]string{
+							"app":      "game",
+							"hostname": host,
+							"app_name": ps.ContainerName,
+						},
 					})
 				}
 
 				if ps.PromePIDGauge == nil {
 					ps.PromePIDGauge = prometheus.NewGauge(prometheus.GaugeOpts{
 						Namespace: "victory",
-						Subsystem: "go_pid",
-						Name:      ps.ContainerName,
+						Subsystem: "go",
+						Name:      "pid",
 						Help:      "容器内进程存活指标 is Alive",
+						ConstLabels: map[string]string{
+							"app":      "game",
+							"hostname": host,
+							"app_name": ps.ContainerName,
+						},
 					})
 				}
 			} else {
