@@ -77,6 +77,7 @@ func Ticker() {
 // 连到服务器上使用docker api获取到Running的容器名和ID
 func Worker() {
 	// 获取每台服务器上容器名和id对应的Map
+	log.Println("开始遍历所有的Host 的 容器 ")
 	for _, host := range dm.Hosts {
 		// 获取dockercli
 		dockerCli, err := utils.NewDockerCli(dm.Username, host, fmt.Sprint(dm.Port))
@@ -86,7 +87,6 @@ func Worker() {
 		}
 		// 获取到容器id和ProcessStatus的对应的map
 		// 先从dMap里面拿，拿不到传个新的进去
-		log.Printf("开始遍历%s所有的容器clientversion : %s", host, dockerCli.ClientVersion())
 		GetRunningDockerInfo(dockerCli, host)
 		if err != nil {
 			log.Println(err.Error())
@@ -181,7 +181,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 				ps.PromeGauge.Set(ps.Alive)
 				log.Printf("PromeGauge Set [%s] Value : %f", ps.ContainerName, ps.Alive)
 				ps.Counter += 1
-				if ps.Counter > 10 {
+				if ps.Counter > dm.Num {
 					ps.Counter = 0
 					ps.Message = fmt.Sprintf("Host: [%s] ,Container: [%s] is Down", ps.Host, ps.ContainerName)
 					psChan <- ps
@@ -207,7 +207,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 			// 查到结束前查看pid是否和之前的一样
 			if ps.IsChange {
 				ps.Counter += 1
-				if ps.Counter > 10 {
+				if ps.Counter > dm.Num {
 					ps.IsChange = false
 					ps.Counter = 0
 					ps.Message = fmt.Sprintf("Host: [%s] ,Container: [%s] Pid Change Resloved", ps.Host, ps.ContainerName)

@@ -28,7 +28,7 @@ type EsSource struct {
 	Timestamp string `json:"timestamp"`
 }
 
-func esinit() {
+func init() {
 	// 解析配置文件到 结构体变量
 	esalarm = &config.Conf.ESAlarm
 	eslog = log.New(os.Stdout, "[ElasticLog] ", log.LstdFlags)
@@ -82,6 +82,7 @@ func worker(q config.Query, as *config.AlarmStatus) {
 			as.StartTime = time.Now().Format("2006-01-02 15:04:05.00")
 		}
 	}
+	log.Printf("Index : %s,LogKey : %s , Hit : %d, \n", q.Index, q.LogKey, res.Hits.TotalHits.Value)
 
 	// 查询数量超过设置num值，则触发告警
 	if as.IsAlarm && as.StartTime != "" {
@@ -105,7 +106,6 @@ func worker(q config.Query, as *config.AlarmStatus) {
 
 // Query 查询
 func query(ql config.Query, esC *elastic.Client) (*elastic.SearchResult, error) {
-	// log.Printf("%#v \n", ql)
 
 	// 时间范围默认一分钟
 	if ql.TimeRange == 0 {
@@ -124,7 +124,6 @@ func query(ql config.Query, esC *elastic.Client) (*elastic.SearchResult, error) 
 
 		mustBQ.Must(elastic.NewMatchPhraseQuery(ql.IndexField, v))
 	}
-
 	// termsQuery := elastic.NewTermQuery(ql.IndexField, ql.LogKey)
 	bq.Must(rangeQuery, mustBQ)
 
@@ -188,8 +187,7 @@ func alarm(url, secret, msg string) {
 
 // 定时器
 func Ticker() {
-	esinit()
-	// interval := time.Duration(esalarm.Time) * time.Minute
+
 	for _, q := range esalarm.QueryList {
 		go func(q config.Query) {
 			if esalarm.IsOpen {
