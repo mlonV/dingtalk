@@ -82,7 +82,6 @@ func Worker() {
 		// 获取dockercli
 		dockerCli, err := utils.NewDockerCli(dm.Username, host, fmt.Sprint(dm.Port))
 		dockerCli.ClientVersion()
-		defer dockerCli.Close()
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -98,6 +97,7 @@ func Worker() {
 
 // 传入主机信息，获取到running状态的docker id/name/ 容器内进程号/进程名
 func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
+	defer dockerCli.Close()
 
 	cList, err := utils.GetContainerByDocker(dockerCli)
 	// tm的忘记关闭连接了
@@ -140,6 +140,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 				}
 			} else {
 				ps, _ = (value).(ProcessStatus)
+				ps.dockerCli = dockerCli
 			}
 
 			// 从全局的dMap中查是否已经有了容器进程的键值信息
