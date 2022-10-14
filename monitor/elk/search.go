@@ -28,7 +28,7 @@ type EsSource struct {
 	Timestamp string `json:"timestamp"`
 }
 
-func init() {
+func elkinit() {
 	// 解析配置文件到 结构体变量
 	esalarm = &config.Conf.ESAlarm
 	eslog = log.New(os.Stdout, "[ElasticLog] ", log.LstdFlags)
@@ -187,7 +187,7 @@ func alarm(url, secret, msg string) {
 
 // 定时器
 func Ticker() {
-
+	elkinit()
 	for _, q := range esalarm.QueryList {
 		go func(q config.Query) {
 			if esalarm.IsOpen {
