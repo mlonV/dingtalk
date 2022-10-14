@@ -31,7 +31,7 @@ yearning:
   
 #es根据索引和数据的数量告警
 esalarm:
-  isOpen: true      #是否开启这个功能
+  isopen: true      #是否开启这个功能
   user: ""    #连接es的用户名
   pass: ""  #连接es的密码
   hosts: ["http://192.168.103.113:9200"]  #连接es的地址
@@ -69,7 +69,7 @@ esalarm:
 
 #监控容器内进程相关参数
 monitordocker:
-  IsOpen: true
+  isopen: true
   #连接服务器使用密钥
   username: "root"
   port: 22

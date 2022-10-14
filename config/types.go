@@ -9,7 +9,7 @@ type DingtalkConfig struct {
 }
 
 type ESAlarm struct {
-	IsOpen    bool     `json:"isOpen"` //是否使用
+	IsOpen    bool     `json:"isopen"` //是否使用
 	User      string   `json:"user"`
 	Pass      string   `json:"pass"`
 	Hosts     []string `json:"hosts"` //["http://192.168.103.113:9200"]
