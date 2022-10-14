@@ -69,6 +69,7 @@ esalarm:
 
 #监控容器内进程相关参数
 monitordocker:
+  IsOpen: true
   #连接服务器使用密钥
   username: "root"
   port: 22
