@@ -99,6 +99,8 @@ func Worker() {
 func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 
 	cList, err := utils.GetContainerByDocker(dockerCli)
+	// tm的忘记关闭连接了
+	defer dockerCli.Close()
 
 	if err != nil {
 		return err
@@ -154,6 +156,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 			}
 			//  docker 容器内执行命令会带有隐藏字符ascii字符，用正则替换掉
 			reg, err := regexp.Compile(`[\x00-\x1F]`)
+
 			if err != nil {
 				return err
 			}
