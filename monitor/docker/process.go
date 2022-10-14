@@ -82,6 +82,7 @@ func Worker() {
 		// 获取dockercli
 		dockerCli, err := utils.NewDockerCli(dm.Username, host, fmt.Sprint(dm.Port))
 		dockerCli.ClientVersion()
+		defer dockerCli.Close()
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -100,7 +101,6 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 
 	cList, err := utils.GetContainerByDocker(dockerCli)
 	// tm的忘记关闭连接了
-	defer dockerCli.Close()
 
 	if err != nil {
 		return err
