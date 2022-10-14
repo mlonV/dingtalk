@@ -136,11 +136,6 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 						Help:      "容器内进程存活指标 is Alive",
 					})
 				}
-				// 发送注册 prome
-
-				log.Printf("注册PromeGauge到prometheus Register : %s", ps.PromeGauge)
-				log.Printf("注册PromePIDGauge到prometheus Register : %s", ps.PromePIDGauge)
-				psChan <- ps
 			} else {
 				ps, _ = (value).(ProcessStatus)
 			}
@@ -229,7 +224,10 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 			log.Printf("PromePIDGauge Set [%s] Value : %f", ps.ContainerName, GetGaugeValue(ps.Counter, string(bPID)))
 			ps.PID = string(bPID)
 			ps.ProcessName = string(bpsname)
-
+			// 发送注册 prome
+			log.Printf("注册PromeGauge到prometheus Register : %s", ps.ContainerName)
+			log.Printf("注册PromePIDGauge到prometheus Register : %s", ps.ContainerName)
+			psChan <- ps
 			dMap.Store(ps.ContainerName, ps)
 		}
 
@@ -255,6 +253,7 @@ func HandleChan(psChan chan ProcessStatus) {
 	}
 }
 
+// 获取用来设置promeSet的float64值
 func GetGaugeValue(counter int64, pid string) float64 {
 	gaugeValue, _ := strconv.ParseFloat(fmt.Sprintf("%d.%s", counter, pid), 64)
 	return gaugeValue
