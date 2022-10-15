@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"net/http"
-	_ "net/http/pprof"
+	// "net/http"
+	// _ "net/http/pprof"
 
 	"github.com/mlonV/dingtalk/config"
 	der "github.com/mlonV/dingtalk/monitor/docker"
@@ -17,10 +17,9 @@ import (
 func main() {
 
 	r := route.RegisterRoutes()
-	go func() {
-
-		http.ListenAndServe("0.0.0.0:9090", nil)
-	}()
+	// go func() {
+	// 	http.ListenAndServe("0.0.0.0:9090", nil)
+	// }()
 	//es 的日志告警
 	if config.Conf.ESAlarm.IsOpen {
 		log.Println("开启elk 功能 ，isopen: ", config.Conf.ESAlarm.IsOpen)
