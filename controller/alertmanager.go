@@ -24,6 +24,7 @@ func (a AlterController) SendMsg(ctx *gin.Context) {
 
 	alertmanagerMsg := &config.AlertmanagerMsg{}
 	ctx.ShouldBindJSON(alertmanagerMsg)
+	fmt.Println(alertmanagerMsg)
 	for _, alertMsg := range alertmanagerMsg.Alerts {
 		var msgList []string
 		// 定义发送消息的内容
@@ -66,6 +67,8 @@ func (a AlterController) SendMsg(ctx *gin.Context) {
 				data, _ := json.Marshal(DingData)
 				// 真正发送消息的地方
 				body, err := utils.SendMsg(sendurl, data)
+				fmt.Println(sendurl, data)
+
 				if err != nil {
 					log.Fatal("send dingtalk err : ", err)
 				}

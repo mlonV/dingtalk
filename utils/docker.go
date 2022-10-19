@@ -1,16 +1,18 @@
 package utils
 
 import (
-	"bufio"
+	// "bufio"
+	"bytes"
 	"context"
 	"fmt"
-	"io"
+	// "io"
 	"net/http"
-	"strings"
+	// "strings"
 
 	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 )
 
 // 传入用户，ip，密码来建立远程执行docker的链接 返回docker api
@@ -49,20 +51,19 @@ func GetContainerByDocker(cli *client.Client) ([]types.Container, error) {
 	return typesCon, nil
 }
 
-// nil
+// nil 添加了 outbuf 和errbuf
 func ExecCmd(dockerCli *client.Client, cmd []string, conID string) (string, error) {
 	dockerctx := context.Background()
 	execConfig := types.ExecConfig{
-		AttachStdin:  true,
+		AttachStdin:  false,
 		AttachStdout: true,
-		AttachStderr: true,
+		AttachStderr: false,
 		DetachKeys:   "ctrl-p,ctrl-q",
 		Tty:          false,
 		Cmd:          cmd,
-		// Env: []string{
-		// 	"FOO=bar",
-		// 	"BAZ=quux",
-		// },
+		Env: []string{
+			"LC_CTYPE=C.UTF-8",
+		},
 	}
 
 	id, err := dockerCli.ContainerExecCreate(dockerctx, conID, execConfig)
@@ -70,21 +71,43 @@ func ExecCmd(dockerCli *client.Client, cmd []string, conID string) (string, erro
 		return "", err
 	}
 	resp, err := dockerCli.ContainerExecAttach(dockerctx, id.ID, types.ExecStartCheck{Tty: false})
+
 	if err != nil {
 		return "", err
 	}
 	defer resp.Close()
 
-	bufReader := bufio.NewReader(resp.Reader)
-	buf := make([]byte, 1024)
-	builder := strings.Builder{}
+	// 区别开 out和err
+	var outBuf, errBuf bytes.Buffer
+	outputDone := make(chan error)
+	go func() {
 
-	for {
-		n, err := bufReader.Read(buf)
-		if err != nil || err == io.EOF || n == 0 {
-			break
+		// StdCopy demultiplexes the stream into two buffers
+		_, err = stdcopy.StdCopy(&outBuf, &errBuf, resp.Reader)
+		outputDone <- err
+	}()
+
+	select {
+	case err := <-outputDone:
+		if err != nil {
+			return "", err
 		}
-		builder.Write(buf[:n])
+		break
+
+	case <-dockerctx.Done():
+		return "", dockerctx.Err()
 	}
-	return builder.String(), nil
+	return outBuf.String(),nil
+	// bufReader := bufio.NewReader(resp.Reader)
+	// buf := make([]byte, 1024)
+	// builder := strings.Builder{}
+
+	// for {
+	// 	n, err := bufReader.Read(buf)
+	// 	if err != nil || err == io.EOF || n == 0 {
+	// 		break
+	// 	}
+	// 	builder.Write(buf[:n])
+	// }
+	// return builder.String(), nil
 }

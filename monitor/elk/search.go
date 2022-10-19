@@ -4,19 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/mlonV/dingtalk/config"
 	"github.com/mlonV/dingtalk/utils"
+	"github.com/mlonV/tools/loger"
 	"github.com/olivere/elastic/v7"
 )
 
 var (
 	esClient *elastic.Client
-	eslog    *log.Logger
+	eslog    *loger.Loger
 	err      error
 	ticker   *time.Ticker
 	esalarm  *config.ESAlarm
@@ -31,7 +30,7 @@ type EsSource struct {
 func elkinit() {
 	// 解析配置文件到 结构体变量
 	esalarm = &config.Conf.ESAlarm
-	eslog = log.New(os.Stdout, "[ElasticLog] ", log.LstdFlags)
+	eslog = config.Log
 	esClient, err = elastic.NewClient(
 		elastic.SetErrorLog(eslog),
 		elastic.SetURL(esalarm.Hosts...),
@@ -47,12 +46,12 @@ func elkinit() {
 		if err != nil {
 			panic(err)
 		}
-		log.Printf("es return code %d ,clusterName : %s ,es Name : %s \n", code, info.ClusterName, info.Name)
+		eslog.Info("es return code %d ,clusterName : %s ,es Name : %s", code, info.ClusterName, info.Name)
 		res, err := esClient.ElasticsearchVersion(host)
 		if err != nil {
 			panic(err)
 		}
-		log.Printf("esversion is : %s \n", res)
+		eslog.Info("esversion is : %s", res)
 	}
 }
 
@@ -82,7 +81,7 @@ func worker(q config.Query, as *config.AlarmStatus) {
 			as.StartTime = time.Now().Format("2006-01-02 15:04:05.00")
 		}
 	}
-	log.Printf("Index : %s,LogKey : %s , Hit : %d, \n", q.Index, q.LogKey, res.Hits.TotalHits.Value)
+	eslog.Info("Index : %s,LogKey : %s , Hit : %d, ", q.Index, q.LogKey, res.Hits.TotalHits.Value)
 
 	// 查询数量超过设置num值，则触发告警
 	if as.IsAlarm && as.StartTime != "" {

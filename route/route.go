@@ -20,5 +20,6 @@ func RegisterRoutes() *gin.Engine {
 
 	// 注册prometheus的监控指标
 	router.GET("/metrics", prome.PromeHTTPFunc())
+	//
 	return router
 }

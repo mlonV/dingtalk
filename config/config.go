@@ -2,11 +2,11 @@ package config
 
 import (
 	"flag"
+
 	"fmt"
-
-	"os"
-
+	"github.com/mlonV/tools/loger"
 	"github.com/spf13/viper"
+	"os"
 )
 
 var (
@@ -15,6 +15,7 @@ var (
 	Port     string
 	h        bool
 	Conf     *DingtalkConfig
+	Log      *loger.Loger
 )
 
 func usage() {
@@ -25,24 +26,45 @@ func usage() {
 func initConfig() {
 	flag.StringVar(&Port, "port", "5000", "监听的端口，default :5000")
 	flag.StringVar(&fileName, "c", "config.yaml", "配置文件名或路径 , 默认 config.yaml")
-	flag.BoolVar(&h, "h", true, "  help  ")
+	flag.BoolVar(&h, "h", false, "  help  ")
 	flag.Usage = usage
 	flag.Parse()
 	if fileName != "config.yaml" {
-		h = false
+		h = true
 		flag.Usage()
+		os.Exit(0)
+	}
+	if h {
+		flag.Usage()
+		os.Exit(0)
 	}
 	vp = viper.New()
 	vp.SetConfigFile(fileName)
 	if err := vp.ReadInConfig(); err != nil {
-		println(err.Error())
-		os.Exit(2)
-		// panic(err)
+		flag.Usage()
+		panic(err)
 	}
 	vp.Unmarshal(&Conf)
+}
 
+func initLog() {
+	// 初始化全局打印日志，获取config.yaml配置文件里面的设置引用到Log
+	Log = loger.NewLoger(
+		&loger.Loger{
+			ToFile:          Conf.LogSet.ToFile,
+			WithFuncAndFile: Conf.LogSet.WithFuncAndFile,
+			Level:           Conf.LogSet.Level,
+			FileLoger: loger.FileLoger{
+				FileName:    Conf.LogSet.FileName,
+				FilePath:    Conf.LogSet.FilePath,
+				FileMaxSize: Conf.LogSet.FileSize,
+				FileSaveNum: Conf.LogSet.FileSaveNum,
+			},
+		},
+	)
 }
 
 func init() {
 	initConfig()
+	initLog()
 }

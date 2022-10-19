@@ -3,12 +3,23 @@
 #  /yearning   yearning工单提醒转发到钉钉机器人群组（实现了多个群发送工单提醒需要配置文件配置钉钉的webhook地址）
 # 
 
-#isAtAll 为@全体，为true时 手机号就不生效
+#日志格式设置
+logset:
+  tofile: true  # false 则不打入文件    
+  filename: "dingtalk.log"
+  filepath: "./logs/"
+  filesize: 104857600   # KB
+  filesavenum: 10
+  # debug/info/warning/error/fatal
+  level: 1
+  withfunc: false       # 输出日志的每行会带有函数名/文件名和行数
 
+
+#isAtAll 为@全体，为true时 手机号就不生效
 # 添加机器人配置，dingding机器人的url和secret，根据prometheus的job名来分组发送告警
 #从alertmanager接收转发的请求地址
 alertmanager:
-  - job: "elkalarm"
+  - job: "elkalarm"    # 这个要和prometheus里面的job_name一样
     url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
     secret: "xxx"
     AtMobiles: ["155xxxxxxx"]
@@ -69,13 +80,15 @@ esalarm:
 
 #监控容器内进程相关参数
 monitordocker:
-  isopen: true
+  isopen: true                  #是否开启这个功能
   #连接服务器使用密钥
   username: "root"
   port: 22
-  interval: 5  #单位秒
-  hosts: ["192.168.103.107"]  #主机列表，遍历主机监控上面的容器内进程
-  process: "/work/code"
+  interval: 10  #单位秒
+  hosts: [""]  #主机列表，遍历主机监控上面的容器内进程 (IP address)
+
+  process: "/work/code"   #golang进程
+  gamexpath: "/var/lib/jenkins/workspace/gamex/bin/GameX/GameX"  #C++的GameX进程
 
   #pid监控多少秒正常
   num: 100

@@ -1,13 +1,28 @@
 package config
 
+import "github.com/mlonV/tools/loger"
+
 type DingtalkConfig struct {
 	ESAlarm       ESAlarm        `yaml:"esalarm"`
 	AlarmStatus                  //告警状态
 	Yearning      []Yearning     `json:"yearning,omitempty"`
 	MonitorDocker MonitorDocker  `json:"monitordocker,omitempty"`
 	Alertmanager  []Alertmanager `json:"alertmanager,omitempty"`
+	LogSet        LogSet         `json:"logset,omitempty"`
 }
 
+// 日志设置 struct
+type LogSet struct {
+	ToFile          bool           `json:"tofile,omitempty"`
+	Level           loger.LogLevel `json:"level,omitempty"`
+	FileName        string         `json:"filename,omitempty"`
+	FilePath        string         `json:"filepath,omitempty"`
+	FileSize        int64          `json:"filesize,omitempty"`
+	WithFuncAndFile bool           `json:"withfunc,omitempty"`
+	FileSaveNum     uint64         `json:"filesavenum,omitempty"`
+}
+
+// ES连接设置 struct
 type ESAlarm struct {
 	IsOpen    bool     `json:"isopen"` //是否使用
 	User      string   `json:"user"`
@@ -16,6 +31,7 @@ type ESAlarm struct {
 	QueryList []Query  `json:"querylist"`
 }
 
+// ES查询设置
 type Query struct {
 	Index          string       `json:"index"`          //"xaas*" #根据kibana前缀匹配的索引 xaax*
 	IndexField     string       `json:"indexfield"`     //索引中的字段
@@ -30,6 +46,7 @@ type Query struct {
 	DingGroup      []DingNotify `json:"dinggroup"`      //钉钉告警组
 }
 
+// 叮叮告警url和secret
 type DingNotify struct {
 	DingURL    string `json:"dingurl"`
 	Dingsecret string `json:"dingsecret"`
@@ -45,21 +62,24 @@ type AlarmStatus struct {
 
 // docker 相关
 type MonitorDocker struct {
-	IsOpen   bool     `json:"isopen"` // 是否开启这个功能
-	Username string   `json:"username"`
-	Port     int64    `json:"port"`
-	Interval int64    `json:"interval"` // 时间间隔
-	Num      int64    `json:"num"`      // 时间间隔
-	Hosts    []string `json:"hosts"`    //主机列表
-	Process  string   `json:"process"`
+	IsOpen    bool     `json:"isopen"` // 是否开启这个功能
+	Username  string   `json:"username"`
+	Port      int64    `json:"port"`
+	Interval  int64    `json:"interval"` // 时间间隔
+	Num       int64    `json:"num"`      // 时间间隔
+	Hosts     []string `json:"hosts"`    //主机列表
+	Process   string   `json:"process"`
+	GameXPath string   `json:"gamexpath"`
 }
 
+// yearning消息struct
 type YearningMsg struct {
 	Msgtype  string                `json:"msgtype,omitempty"`
 	At       `json:"at,omitempty"` // 为了实现发送消息at相关人员准备的
 	Markdown `json:"markdown,omitempty"`
 }
 
+// 发送叮叮的markdown
 type Markdown struct {
 	Title string `json:"title,omitempty"`
 	Text  string `json:"text,omitempty"`
@@ -78,6 +98,7 @@ type Yearning struct {
 	IsAtAll   bool     `json:"isAtAll,omitempty"`
 }
 
+// 钉钉消息text
 type Text struct {
 	Content string `json:"content,omitempty"`
 }
