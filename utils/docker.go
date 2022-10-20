@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
 	// "io"
 	"net/http"
 	// "strings"
@@ -77,7 +78,8 @@ func ExecCmd(dockerCli *client.Client, cmd []string, conID string) (string, erro
 	}
 	defer resp.Close()
 
-	// 区别开 out和err
+	// // 区别开 out和err
+	// // 新的接收命令返回的方法
 	var outBuf, errBuf bytes.Buffer
 	outputDone := make(chan error)
 	go func() {
@@ -97,7 +99,9 @@ func ExecCmd(dockerCli *client.Client, cmd []string, conID string) (string, erro
 	case <-dockerctx.Done():
 		return "", dockerctx.Err()
 	}
-	return outBuf.String(),nil
+	return outBuf.String(), nil
+
+	// // 之前的接收命令返回的方法
 	// bufReader := bufio.NewReader(resp.Reader)
 	// buf := make([]byte, 1024)
 	// builder := strings.Builder{}

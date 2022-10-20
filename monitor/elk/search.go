@@ -27,7 +27,12 @@ type EsSource struct {
 	Timestamp string `json:"timestamp"`
 }
 
-func elkinit() {
+func init() {
+	elkInit()
+	promeInit()
+}
+
+func elkInit() {
 	// 解析配置文件到 结构体变量
 	esalarm = &config.Conf.ESAlarm
 	eslog = config.Log
@@ -37,7 +42,7 @@ func elkinit() {
 		elastic.SetBasicAuth(esalarm.User, esalarm.Pass),
 	)
 	if err != nil {
-		panic(err)
+		config.Log.Fatal(err.Error())
 	}
 	// 查询每个版本和连接信息
 	for _, host := range esalarm.Hosts {
@@ -53,6 +58,12 @@ func elkinit() {
 		}
 		eslog.Info("esversion is : %s", res)
 	}
+}
+
+func promeInit() {
+	// 根据queryList 来生成对应数量的prome
+	// prome
+
 }
 
 func NewAlarmStatus() config.AlarmStatus {
@@ -89,17 +100,6 @@ func worker(q config.Query, as *config.AlarmStatus) {
 		trigger(q, res, as)
 		// 重复告警的间隔
 		time.Sleep(time.Second * time.Duration(q.RepeatInterval))
-	}
-
-	// 查询数量没超过设置num值，但是之前有设置过startTime了，则恢复告警
-	if !as.IsAlarm && as.StartTime != "" {
-		as.EndTime = time.Now().Format("2006-01-02 15:04:05.00")
-		if q.IsResolved {
-			resolved(q, res, as)
-		}
-		// 重置startTime
-		as.StartTime = ""
-		as.AlarmCount = 0
 	}
 }
 
@@ -148,24 +148,6 @@ func trigger(ql config.Query, res *elastic.SearchResult, as *config.AlarmStatus)
 	}
 }
 
-// 恢复通知
-func resolved(ql config.Query, res *elastic.SearchResult, as *config.AlarmStatus) {
-	// 需要发送的消息
-	msgList := []string{
-		fmt.Sprintf("告警名 : ELK log %s", strings.Join(ql.LogKey, " ")),
-		fmt.Sprintf("告警状态 : %s", string("resolved")),
-		fmt.Sprintf("开始时间 : %s", as.StartTime),
-		fmt.Sprintf("结束时间 : %s", as.EndTime),
-		fmt.Sprintf("告警内容: %s 超过告警阈值%d条", ql.LogKey, ql.Num),
-		fmt.Sprintf("%d分钟内%s数量: %d", ql.TimeRange, ql.LogKey, res.Hits.TotalHits.Value),
-		fmt.Sprintln("信息 : 告警已恢复"),
-	}
-	// 遍历钉钉组发送
-	for _, dg := range ql.DingGroup {
-		alarm(dg.DingURL, dg.Dingsecret, strings.Join(msgList, "\n"))
-	}
-}
-
 func alarm(url, secret, msg string) {
 
 	sendurl := utils.GetSendUrl(url, secret)
@@ -175,18 +157,15 @@ func alarm(url, secret, msg string) {
 	DingData.Text.Content = msg
 
 	data, _ := json.Marshal(DingData)
-	// 真正发送消息的地方
-	fmt.Println("开始告警！！！！！！： ", sendurl, string(data))
-	// body, err := utils.SendMsg(sendurl, data)
-	// if err != nil {
-	// 	log.Fatal("send dingtalk err : ", err)
-	// }
-	// fmt.Println(string(body))
+	body, err := utils.SendMsg(sendurl, data)
+	if err != nil {
+		config.Log.Error("send dingtalk err : ", err)
+	}
+	config.Log.Warning("发送的告警信息为: ", string(body))
 }
 
 // 定时器
 func Ticker() {
-	elkinit()
 	for _, q := range esalarm.QueryList {
 		go func(q config.Query) {
 			if esalarm.IsOpen {
@@ -208,9 +187,3 @@ func Ticker() {
 
 	// ticker.Stop()
 }
-
-// func main() {
-// 	result, err := esClient.ElasticsearchVersion("http://192.168.103.113:9200")
-// 	eslog.Println(result, err)
-// 	Ticker()
-// }
