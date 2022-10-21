@@ -9,7 +9,7 @@ logset:
   filename: "dingtalk.log"
   filepath: "./logs/"
   filesize: 104857600   # KB
-  filesavenum: 10
+  filesavenum: 10       # 文件保存数量，超过数量则自动删除
   # debug/info/warning/error/fatal
   level: 1
   withfunc: false       # 输出日志的每行会带有函数名/文件名和行数

@@ -15,22 +15,32 @@
 #  /sendmsg   prometheus/alertmanager发送webhook地址
 #  /yearning   yearning工单提醒转发到钉钉机器人群组（实现了多个群发送工单提醒需要配置文件配置钉钉的webhook地址）
 # 
+#地址后缀: 
+#  /sendmsg   prometheus/alertmanager发送webhook地址
+#  /yearning   yearning工单提醒转发到钉钉机器人群组（实现了多个群发送工单提醒需要配置文件配置钉钉的webhook地址）
+# 
+
+#日志格式设置
+logset:
+  tofile: true  # false 则不打入文件    
+  filename: "dingtalk.log"
+  filepath: "./logs/"
+  filesize: 104857600   # KB
+  filesavenum: 10       # 文件保存数量，超过数量则自动删除
+  # debug/info/warning/error/fatal
+  level: 1
+  withfunc: false       # 输出日志的每行会带有函数名/文件名和行数
+
 
 #isAtAll 为@全体，为true时 手机号就不生效
-
 # 添加机器人配置，dingding机器人的url和secret，根据prometheus的job名来分组发送告警
 #从alertmanager接收转发的请求地址
 alertmanager:
-  - job: "xxx"
+  - job: "elkalarm"    # 这个要和prometheus里面的job_name一样
     url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
     secret: "xxx"
-    AtMobiles: ["132xxxxxxxx"]
+    AtMobiles: ["155xxxxxxx"]
     isAtAll: false
-  - job: "xxx2"
-    url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
-    secret: "xxx"
-    AtMobiles: ["155xxxxxxxx"]
-    isAtAll: true
 
 
 # 添加机器人配置，dingding机器人的url和secret .
@@ -46,10 +56,10 @@ yearning:
     secret: "xxx"
     atMobiles: ["155xxxxxxxx","132xxxxxxxx"]
     isAtAll: false #是否at全体
-
+  
 #es根据索引和数据的数量告警
 esalarm:
-  isOpen: true      #是否开启这个功能
+  isopen: true      #是否开启这个功能
   user: ""    #连接es的用户名
   pass: ""  #连接es的密码
   hosts: ["http://192.168.103.113:9200"]  #连接es的地址
@@ -57,7 +67,7 @@ esalarm:
   querylist:
   - index: "phplog_def*"   #索引名
     indexfield: "message"  #查询用的字段
-    logKey: ["INFO"]      #匹配的信息  使用了es的PhraseQuery
+    logKey: ["INFO","5c940de9c166a32dc1f63d9dafc6822f"]      #匹配的信息  使用了es的PhraseQuery
     #时间筛选字段（有的是timestamp 有的是@timestamp
     timefield: "timestamp"
     num: 10  #时间范围内，超过多少条就告警
@@ -71,7 +81,7 @@ esalarm:
         dingsecret: "xxx"
   - index: "phplog_def*"   #索引名
     indexfield: "message"
-    logKey: ["apple notify data"]
+    logKey: ["apple notify data","REFUND"]
     timefield: "timestamp"
     num: 1
     timerange: 1 
@@ -83,3 +93,19 @@ esalarm:
       #   dingsecret: "xxx"
       # - dingurl: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
       #   dingsecret: "xxx"
+
+
+#监控容器内进程相关参数
+monitordocker:
+  isopen: true                  #是否开启这个功能
+  #连接服务器使用密钥
+  username: "root"
+  port: 22
+  interval: 10  #单位秒
+  hosts: [""]  #主机列表，遍历主机监控上面的容器内进程 (IP address)
+
+  process: "/work/code"   #golang进程
+  gamexpath: "/var/lib/jenkins/workspace/gamex/bin/GameX/GameX"  #C++的GameX进程
+
+  #pid监控多少秒正常
+  num: 100

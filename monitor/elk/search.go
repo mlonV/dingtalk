@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -29,7 +30,6 @@ type EsSource struct {
 
 func init() {
 	elkInit()
-	promeInit()
 }
 
 func elkInit() {
@@ -58,12 +58,6 @@ func elkInit() {
 		}
 		eslog.Info("esversion is : %s", res)
 	}
-}
-
-func promeInit() {
-	// 根据queryList 来生成对应数量的prome
-	// prome
-
 }
 
 func NewAlarmStatus() config.AlarmStatus {
@@ -137,14 +131,22 @@ func trigger(ql config.Query, res *elastic.SearchResult, as *config.AlarmStatus)
 		fmt.Sprintf("告警名 : ELK log %s", strings.Join(ql.LogKey, " ")),
 		fmt.Sprintf("告警状态 : %s", string("firing")),
 		fmt.Sprintf("开始时间 : %s", as.StartTime),
-		fmt.Sprintf("开始时间 : %s", as.StartTime),
 		fmt.Sprintf("告警内容: %s 超过告警阈值%d条", ql.LogKey, ql.Num),
 		fmt.Sprintf("%d分钟内%s数量: %d", ql.TimeRange, ql.LogKey, res.Hits.TotalHits.Value),
 		fmt.Sprintf("信息如下[%d]条 : ", ql.SendMsgNum),
 	}
+	sendAlertMsg := strings.Join(msgList, "\n")
+	var ess EsSource
+	for k, item := range res.Each(reflect.TypeOf(ess)) {
+		if k < int(ql.SendMsgNum) {
+			sendAlertMsg += fmt.Sprintf("\n%s", item.(EsSource))
+		}
+		// t := item.(EsSource)
+	}
+
 	// 遍历钉钉组发送
 	for _, dg := range ql.DingGroup {
-		alarm(dg.DingURL, dg.Dingsecret, strings.Join(msgList, "\n"))
+		alarm(dg.DingURL, dg.Dingsecret, sendAlertMsg)
 	}
 }
 
@@ -161,7 +163,9 @@ func alarm(url, secret, msg string) {
 	if err != nil {
 		config.Log.Error("send dingtalk err : ", err)
 	}
-	config.Log.Warning("发送的告警信息为: ", string(body))
+	config.Log.Warning("发送的告警信息为: ", string(data))
+	config.Log.Warning("发送告警接口返回: ", string(body))
+
 }
 
 // 定时器
