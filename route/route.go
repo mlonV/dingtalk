@@ -18,6 +18,9 @@ func RegisterRoutes() *gin.Engine {
 	yearningController := &controller.YearningController{}
 	router.POST("/yearning", yearningController.SendYearning)
 
+	// reload 接口
+	router.POST("/-/reload", controller.ReloadConfig)
+
 	// 注册prometheus的监控指标
 	router.GET("/metrics", prome.PromeHTTPFunc())
 	//

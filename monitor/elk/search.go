@@ -172,20 +172,19 @@ func alarm(url, secret, msg string) {
 func Ticker() {
 	for _, q := range esalarm.QueryList {
 		go func(q config.Query) {
-			if esalarm.IsOpen {
-				interval := time.Second * time.Duration(q.Interval)
-				ticker = time.NewTicker(interval)
+			interval := time.Second * time.Duration(q.Interval)
+			ticker = time.NewTicker(interval)
 
-				// 定时任务处理逻辑
-				//运行每个goroutine的query都先初始化下告警状态
-				alarmStatus := NewAlarmStatus()
-				for {
-					// 调用Reset方法对timer对象进行定时器重置
-					// 	ticker.Reset(interval)
-					<-ticker.C
-					worker(q, &alarmStatus)
-				}
+			// 定时任务处理逻辑
+			//运行每个goroutine的query都先初始化下告警状态
+			alarmStatus := NewAlarmStatus()
+			for {
+				// 调用Reset方法对timer对象进行定时器重置
+				// 	ticker.Reset(interval)
+				<-ticker.C
+				worker(q, &alarmStatus)
 			}
+
 		}(q)
 	}
 

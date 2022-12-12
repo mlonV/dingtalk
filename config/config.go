@@ -29,22 +29,11 @@ func initConfig() {
 	flag.BoolVar(&h, "h", false, "  help  ")
 	flag.Usage = usage
 	flag.Parse()
-	if fileName != "config.yaml" {
-		h = true
-		flag.Usage()
-		os.Exit(0)
-	}
-	if h {
-		flag.Usage()
-		os.Exit(0)
-	}
-	vp = viper.New()
-	vp.SetConfigFile(fileName)
-	if err := vp.ReadInConfig(); err != nil {
-		flag.Usage()
+	// 使LoadConfig() 可以多次执行
+
+	if err := LaodConfig(); err != nil {
 		panic(err)
 	}
-	vp.Unmarshal(&Conf)
 }
 
 func initLog() {
@@ -62,6 +51,22 @@ func initLog() {
 			},
 		},
 	)
+}
+
+func LaodConfig() error {
+	if h {
+		flag.Usage()
+		os.Exit(0)
+	}
+	vp = viper.New()
+	vp.SetConfigFile(fileName)
+	if err := vp.ReadInConfig(); err != nil {
+		return err
+	}
+	if err := vp.Unmarshal(&Conf); err != nil {
+		return err
+	}
+	return nil
 }
 
 func init() {

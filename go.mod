@@ -11,7 +11,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gin-gonic/gin v1.7.4
 	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/mlonV/tools v1.1.3 // indirect
+	github.com/mlonV/tools v1.1.3
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/prometheus/client_golang v1.13.0
 	github.com/sirupsen/logrus v1.9.0 // indirect
