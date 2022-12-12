@@ -12,18 +12,21 @@ import (
 )
 
 type RedisMetrics struct {
-	RedisCli           *redis.Client
-	MetricsList        []Metrics
-	RedisRegexpKeyName string   // queue:*
-	RedisKeyList       []string // keys queue:*的结果
+	RedisKeyList []string // keys queue:*的结果
 }
 
 type Metrics struct {
-	RedisKeyName string
-	RedisGauge   prometheus.Gauge
+	RedisCli           *redis.Client
+	RedisRegexpKeyName string // queue:*
+	RedisKeyName       string
+	RedisGauge         prometheus.Gauge
 }
 
-var redisCli *redis.Client
+var (
+	keymap     map[string]*Metrics            = make(map[string]*Metrics)
+	metricsMap map[string]map[string]*Metrics = make(map[string]map[string]*Metrics, 200)
+	redisCli   *redis.Client
+)
 
 func init() {
 	redisCli = redis.NewClient(&redis.Options{
@@ -52,43 +55,51 @@ func SetRedisMetricsGauge(RedisKeyName string) prometheus.Gauge {
 }
 
 // 处理每一个根据Keys queues* 查出来的队列
-func Handler(rm *RedisMetrics) error {
-	for _, key := range rm.RedisKeyList {
-
-		// 遍历每一个key 查询长度，设置Gauge
-		ic := rm.RedisCli.LLen(context.Background(), key)
-		if ic.Err() != nil {
-			config.Log.Error("Get RedisKey Llen Err: %s ", ic.Err())
-			continue
+func Handler() {
+	for _, mmap := range metricsMap {
+		for _, metrics := range mmap {
+			ic := metrics.RedisCli.LLen(context.Background(), metrics.RedisKeyName)
+			if ic.Err() != nil {
+				config.Log.Error("Get RedisKey Llen Err: %s ", ic.Err())
+				// 如果查询报错，直接设置0
+				metrics.RedisGauge.Set(float64(0))
+				continue
+			}
+			metrics.RedisGauge.Set(float64(ic.Val()))
+			config.Log.Info("metrics.RedisGauge.Set Key %s: %d ", metrics.RedisKeyName, float64(ic.Val()))
 		}
-		metrics := Metrics{
-			RedisKeyName: key,
-			RedisGauge:   SetRedisMetricsGauge(key),
-		}
-		metrics.RedisGauge.Set(float64(ic.Val()))
-		prome.PromeRegister.Register(metrics.RedisGauge)
 	}
-	return nil
 }
 
 func worker() {
+	config.Log.Info("Start Redis QueueKeyLens ,Interval: %ds ", config.Conf.RedisKey.Interval)
 	for _, regexpKey := range config.Conf.RedisKey.Keys {
-		config.Log.Info("Start Redis QueueKeyLens ,Interval: %ds ", config.Conf.RedisKey.Interval)
-		rm := NewRedisMetrics()
-		rm.RedisCli = redisCli
-		rm.RedisRegexpKeyName = regexpKey
-		ssc := rm.RedisCli.Keys(context.Background(), rm.RedisRegexpKeyName)
+		ssc := redisCli.Keys(context.Background(), regexpKey)
 		s, err := ssc.Result()
 		if err != nil {
 			config.Log.Error("Get RedisKey by regexpKey Err: %s ", err)
 		}
-		rm.RedisKeyList = s
-		config.Log.Debug("Get Key By %s : %s", rm.RedisRegexpKeyName, s)
-		if err := Handler(rm); err != nil {
-			config.Log.Error("Handler RedisKey err : ", err)
+		for _, key := range s {
+			// 如果是空的话就新设置一个 map[string]*Metrics
+			if metricsMap[regexpKey][key] == nil {
+				config.Log.Info("metricsMap[%s][%s] : %v \n", regexpKey, key, metricsMap[regexpKey][key])
+				metrics := &Metrics{
+					RedisCli:           redisCli,
+					RedisRegexpKeyName: regexpKey,
+					RedisKeyName:       key,
+					RedisGauge:         SetRedisMetricsGauge(key),
+				}
+				// 注册到prometheus
+				prome.PromeRegister.Register(metrics.RedisGauge)
+				keymap[key] = metrics
+				metricsMap[regexpKey] = keymap
+			}
 		}
-
 	}
+	config.Log.Info("rmList ALL : %#v \n", metricsMap)
+
+	// 处理map所有的数据
+	Handler()
 }
 
 // 定时器
