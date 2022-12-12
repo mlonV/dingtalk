@@ -22,7 +22,7 @@ func Run() {
 		go der.Ticker()
 	}
 
-	// 启动监控docker 内进程的监控
+	// 启动监控redis Key(list llen) 内进程的监控
 	if config.Conf.RedisKey.IsOpen {
 		config.Log.Info("开启Redis QueueKey 功能 ，isopen: ", config.Conf.RedisKey.IsOpen)
 		go rediskey.Ticker()
