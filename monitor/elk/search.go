@@ -28,10 +28,6 @@ type EsSource struct {
 	Timestamp string `json:"timestamp"`
 }
 
-func init() {
-	elkInit()
-}
-
 func elkInit() {
 	// 解析配置文件到 结构体变量
 	esalarm = &config.Conf.ESAlarm
@@ -170,6 +166,7 @@ func alarm(url, secret, msg string) {
 
 // 定时器
 func Ticker() {
+	elkInit()
 	for _, q := range esalarm.QueryList {
 		go func(q config.Query) {
 			interval := time.Second * time.Duration(q.Interval)

@@ -92,3 +92,14 @@ monitordocker:
 
   #pid监控多少秒正常
   num: 100
+
+
+#查询redis中list的llen长度来暴漏指标（把redis当队列使用
+rediskey:
+    isopen: true
+    hostname: ""
+    username: ""
+    password: ""
+    port: 6379
+    keys: ["queues:*[^notify]"]
+    interval: 10

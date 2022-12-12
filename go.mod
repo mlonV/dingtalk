@@ -10,6 +10,7 @@ require (
 	github.com/docker/docker v17.12.0-ce-rc1.0.20191011211953-adfac697dc5b+incompatible
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gin-gonic/gin v1.7.4
+	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/mlonV/tools v1.1.3
 	github.com/olivere/elastic/v7 v7.0.32

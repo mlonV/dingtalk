@@ -8,6 +8,7 @@ type DingtalkConfig struct {
 	Yearning      []Yearning     `json:"yearning,omitempty"`
 	MonitorDocker MonitorDocker  `json:"monitordocker,omitempty"`
 	Alertmanager  []Alertmanager `json:"alertmanager,omitempty"`
+	RedisKey      RedisKey       `json:"rediskey,omitempty"`
 	LogSet        LogSet         `json:"logset,omitempty"`
 }
 
@@ -29,6 +30,17 @@ type ESAlarm struct {
 	Pass      string   `json:"pass"`
 	Hosts     []string `json:"hosts"` //["http://192.168.103.113:9200"]
 	QueryList []Query  `json:"querylist"`
+}
+
+// 查询rediskey[type list] 的长度
+type RedisKey struct {
+	IsOpen   bool     `json:"isopen"`
+	Hostname string   `json:"hostname"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	Port     int      `json:"port"`
+	Keys     []string `json:"keys"`
+	Interval int64    `json:"interval"`
 }
 
 // ES查询设置
