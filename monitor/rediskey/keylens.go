@@ -66,7 +66,7 @@ func Handler() {
 				continue
 			}
 			metrics.RedisGauge.Set(float64(ic.Val()))
-			config.Log.Info("metrics.RedisGauge.Set Key %s: %d ", metrics.RedisKeyName, float64(ic.Val()))
+			config.Log.Info("metrics.RedisGauge.Set Key %s: %d ", metrics.RedisKeyName, ic.Val())
 		}
 	}
 }
