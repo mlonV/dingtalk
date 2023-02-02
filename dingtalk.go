@@ -5,7 +5,7 @@ import (
 	// _ "net/http/pprof"
 
 	"github.com/mlonV/dingtalk/config"
-	"github.com/mlonV/dingtalk/monitor"
+	_ "github.com/mlonV/dingtalk/monitor"
 	"github.com/mlonV/dingtalk/route"
 )
 
@@ -17,9 +17,6 @@ func main() {
 	// go func() {
 	// 	http.ListenAndServe("0.0.0.0:9090", nil)
 	// }()
-
-	// 启动所有的监控
-	monitor.Run()
 
 	// 启动gin监控告警
 	if err := r.Run(":" + config.Port); err != nil {

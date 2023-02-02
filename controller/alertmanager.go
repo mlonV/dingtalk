@@ -3,7 +3,6 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -24,7 +23,7 @@ func (a AlterController) SendMsg(ctx *gin.Context) {
 
 	alertmanagerMsg := &config.AlertmanagerMsg{}
 	ctx.ShouldBindJSON(alertmanagerMsg)
-	fmt.Println(alertmanagerMsg)
+	config.Log.Info("绑定altermanager结构体的内容: %#v", alertmanagerMsg)
 	for _, alertMsg := range alertmanagerMsg.Alerts {
 		var msgList []string
 		// 定义发送消息的内容
@@ -67,12 +66,12 @@ func (a AlterController) SendMsg(ctx *gin.Context) {
 				data, _ := json.Marshal(DingData)
 				// 真正发送消息的地方
 				body, err := utils.SendMsg(sendurl, data)
-				fmt.Println(sendurl, data)
+				config.Log.Info("发送的数据URL: %s ,发送的数据: %s", sendurl, data)
 
 				if err != nil {
-					log.Fatal("send dingtalk err : ", err)
+					config.Log.Fatal("send dingtalk err : ", err)
 				}
-				fmt.Println(string(body))
+				config.Log.Info(string(body))
 			}
 		}
 

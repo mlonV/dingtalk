@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 
@@ -38,7 +39,7 @@ func init() {
 // docker内进程
 type ProcessStatus struct {
 	dockerCli     *client.Client // dockerCli
-	Host          string         // 所属的主机
+	Addr          string         // 所属的主机
 	ContainerName string         // 容器名
 	ContainerID   string         // 容器ID
 	ProcessName   string         // ProcessName 进程名
@@ -96,7 +97,7 @@ func Worker() {
 }
 
 // 传入主机信息，获取到running状态的docker id/name/ 容器内进程号/进程名
-func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
+func GetRunningDockerInfo(dockerCli *client.Client, addr string) error {
 	// tm的忘记关闭连接了
 	defer dockerCli.Close()
 	cList, err := utils.GetContainerByDocker(dockerCli)
@@ -105,7 +106,12 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 		return err
 	}
 	// 遍历每一个容器
+	info, err := dockerCli.Info(context.Background())
+	if err != nil {
+		return err
+	}
 
+	fmt.Printf("%s  || %#v", dockerCli.DaemonHost(), info.Name)
 	for _, container := range cList {
 		// 只搞运行中的容器
 		if container.State == "running" {
@@ -115,8 +121,13 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 			if !ok {
 				ps.ContainerName = containerName
 				ps.ContainerID = container.ID
-				ps.Host = host
+				ps.Addr = addr
 				ps.Alive = -1
+				// 从dockerCli来获取主机名
+				info, err := dockerCli.Info(context.Background())
+				if err != nil {
+					config.Log.Error("Get Docker Info err: %s", err)
+				}
 				// 如果没有prometheus-cli 则分配一个
 				if ps.PromeGauge == nil {
 					ps.PromeGauge = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -126,7 +137,8 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 						Help:      "容器内进程存活指标 is Alive",
 						ConstLabels: map[string]string{
 							"app":      "game",
-							"hostname": host,
+							"hostname": info.Name,
+							"address":  addr,
 							"app_name": ps.ContainerName,
 						},
 					})
@@ -140,7 +152,8 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 						Help:      "容器内进程存活指标 is Alive",
 						ConstLabels: map[string]string{
 							"app":      "game",
-							"hostname": host,
+							"hostname": info.Name,
+							"address":  addr,
 							"app_name": ps.ContainerName,
 						},
 					})
@@ -181,7 +194,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 				ps.IsChange = true
 				ps.PromeGauge.Set(ps.Alive)
 				config.Log.Info("PromeGauge Set [%s] Value : %f", ps.ContainerName, ps.Alive)
-				ps.Message = fmt.Sprintf("Host: [%s] ,Container: [%s] is Down", ps.Host, ps.ContainerName)
+				ps.Message = fmt.Sprintf("Host: [%s] ,Container: [%s] is Down", ps.Addr, ps.ContainerName)
 				psChan <- ps
 				// 跳出之前先把值存进dMap
 				dMap.Store(ps.ContainerName, ps)
@@ -197,7 +210,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 				ps.Counter += 1
 				if ps.Counter > dm.Num {
 					ps.Counter = 0
-					ps.Message = fmt.Sprintf("Host: [%s] ,Container: [%s] is Down", ps.Host, ps.ContainerName)
+					ps.Message = fmt.Sprintf("Host: [%s] ,Container: [%s] is Down", ps.Addr, ps.ContainerName)
 					psChan <- ps
 					dMap.Store(ps.ContainerName, ps)
 					continue
@@ -224,7 +237,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, host string) error {
 				if ps.Counter > dm.Num {
 					ps.IsChange = false
 					ps.Counter = 0
-					ps.Message = fmt.Sprintf("Host: [%s] ,Container: [%s] Pid Change Resloved", ps.Host, ps.ContainerName)
+					ps.Message = fmt.Sprintf("Host: [%s] ,Container: [%s] Pid Change Resloved", ps.Addr, ps.ContainerName)
 					psChan <- ps
 				}
 				ps.PromePIDGauge.Set(GetGaugeValue(ps.Counter, pid))

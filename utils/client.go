@@ -20,7 +20,6 @@ func SendMsg(url string, data []byte) (body []byte, err error) {
 		return nil, fmt.Errorf("josn marshal err : %s", err)
 
 	}
-	fmt.Println(string(data))
 
 	client := &http.Client{}
 
