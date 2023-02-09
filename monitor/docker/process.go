@@ -32,8 +32,7 @@ func init() {
 	//  DockerMonitor
 	dm = config.Conf.MonitorDocker
 	psChan = make(chan ProcessStatus, 100)
-
-	fmt.Printf("%#v\n", dm)
+	config.Log.Debug("%#v\n", dm)
 }
 
 // docker内进程
@@ -101,17 +100,11 @@ func GetRunningDockerInfo(dockerCli *client.Client, addr string) error {
 	// tm的忘记关闭连接了
 	defer dockerCli.Close()
 	cList, err := utils.GetContainerByDocker(dockerCli)
-
 	if err != nil {
 		return err
 	}
+
 	// 遍历每一个容器
-	info, err := dockerCli.Info(context.Background())
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("%s  || %#v", dockerCli.DaemonHost(), info.Name)
 	for _, container := range cList {
 		// 只搞运行中的容器
 		if container.State == "running" {
@@ -300,4 +293,9 @@ func HandleChan(psChan chan ProcessStatus) {
 func GetGaugeValue(counter int64, pid string) float64 {
 	gaugeValue, _ := strconv.ParseFloat(fmt.Sprintf("%d.%s", counter, pid), 64)
 	return gaugeValue
+}
+
+// 给controller/prome 中unRegister用
+func GetdMap() sync.Map {
+	return dMap
 }

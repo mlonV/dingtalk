@@ -20,9 +20,15 @@ func RegisterRoutes() *gin.Engine {
 
 	// reload 接口
 	router.POST("/-/reload", controller.ReloadConfig)
+	// help 接口
+	router.GET("/help", controller.Help)
 
 	// 注册prometheus的监控指标
 	router.GET("/metrics", prome.PromeHTTPFunc())
-	//
+
+	// 取消注册prometheus.Register
+	p := &controller.Prome{}
+	router.DELETE("/prome/delete/:containername", p.Unregister)
+	router.DELETE("/prome/all", p.UnregisterAll)
 	return router
 }
