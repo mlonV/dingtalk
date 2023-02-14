@@ -33,6 +33,7 @@ func RegisterRoutes() *gin.Engine {
 
 	// 发送sentry告警
 	sc := &controller.SentryController{}
-	router.POST("/sentry", sc.WebHook)
+	router.POST("/sentry/text", sc.WebHookForText)
+	router.POST("/sentry/markdown", sc.WebHookForMarkdown)
 	return router
 }

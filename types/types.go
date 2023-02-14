@@ -98,11 +98,12 @@ type Text struct {
 //	    "msgtype":"text"
 //	}"""
 //
-// 发送钉钉消息格式 Msg
+// 发送钉钉消息格式 Text类型
 type Msg struct {
-	Msgtype string                `json:"msgtype,omitempty"`
-	At      `json:"at,omitempty"` // 为了实现发送消息at相关人员准备的
-	Text    `json:"text,omitempty"`
+	Msgtype  string      `json:"msgtype,omitempty"`
+	At       `json:"at"` // 为了实现发送消息at相关人员准备的
+	Text     `json:"text"`
+	Markdown `json:"markdown"`
 }
 
 // alertmanager 官方接口发送数据的类型

@@ -30,6 +30,7 @@ func Help(ctx *gin.Context) {
 	DELETE  "/prome/delete/[containername]" "取消注册到prometheus的单个指标[中是容器名]"
 	DELETE  "/prome/all"                    "取消注册所有的容器进程监控"
 	
-	POST    "/sentry"         "sentry 发送webhook"`
+	POST    "/sentry/text"           "sentry 发送webhook text形式"
+	POST    "/sentry/markdown"       "sentry 发送webhook Markdown形式"`
 	ctx.String(http.StatusOK, result)
 }
