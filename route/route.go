@@ -30,5 +30,9 @@ func RegisterRoutes() *gin.Engine {
 	p := &controller.Prome{}
 	router.DELETE("/prome/delete/:containername", p.Unregister)
 	router.DELETE("/prome/all", p.UnregisterAll)
+
+	// 发送sentry告警
+	sc := &controller.SentryController{}
+	router.POST("/sentry", sc.WebHook)
 	return router
 }

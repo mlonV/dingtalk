@@ -1,7 +1,8 @@
-package config
+package types
 
 import "github.com/mlonV/tools/loger"
 
+// 加载配置文件用
 type DingtalkConfig struct {
 	ESAlarm       ESAlarm        `yaml:"esalarm"`
 	AlarmStatus                  //告警状态
@@ -10,6 +11,12 @@ type DingtalkConfig struct {
 	Alertmanager  []Alertmanager `json:"alertmanager,omitempty"`
 	RedisKey      RedisKey       `json:"rediskey,omitempty"`
 	LogSet        LogSet         `json:"logset,omitempty"`
+	Sentry        Sentry         `json:"sentry,omitempty"`
+}
+
+// Sentry dingding告警的地址
+type Sentry struct {
+	DingGroup []DingNotify `json:"dinggroup"` //钉钉告警组
 }
 
 // 日志设置 struct
@@ -32,32 +39,6 @@ type ESAlarm struct {
 	QueryList []Query  `json:"querylist"`
 }
 
-// 查询rediskey[type list] 的长度
-type RedisKey struct {
-	IsOpen   bool     `json:"isopen"`
-	Hostname string   `json:"hostname"`
-	Username string   `json:"username"`
-	Password string   `json:"password"`
-	Port     int      `json:"port"`
-	Keys     []string `json:"keys"`
-	Interval int64    `json:"interval"`
-}
-
-// ES查询设置
-type Query struct {
-	Index          string       `json:"index"`          //"xaas*" #根据kibana前缀匹配的索引 xaax*
-	IndexField     string       `json:"indexfield"`     //索引中的字段
-	LogKey         []string     `json:"logKey"`         //"ERROR"  #
-	TimeField      string       `json:"timefield"`      //索引时间段的字段名
-	Num            int64        `json:"num"`            //#数量
-	TimeRange      int64        `json:"timerange"`      //时间范围
-	SendMsgNum     int64        `json:"sendMsgNum"`     //发送消息数量
-	Interval       int64        `json:"interval"`       //查询es的间隔
-	RepeatInterval int64        `json:"repeatinterval"` //重复告警间隔
-	IsResolved     bool         `json:"isresolved"`     //是否发送恢复通知
-	DingGroup      []DingNotify `json:"dinggroup"`      //钉钉告警组
-}
-
 // 叮叮告警url和secret
 type DingNotify struct {
 	DingURL    string `json:"dingurl"`
@@ -70,18 +51,6 @@ type AlarmStatus struct {
 	StartTime  string
 	EndTime    string
 	IsAlarm    bool // 当前是否在告警
-}
-
-// docker 相关
-type MonitorDocker struct {
-	IsOpen    bool     `json:"isopen"` // 是否开启这个功能
-	Username  string   `json:"username"`
-	Port      int64    `json:"port"`
-	Interval  int64    `json:"interval"` // 时间间隔
-	Num       int64    `json:"num"`      // 时间间隔
-	Hosts     []string `json:"hosts"`    //主机列表
-	Process   string   `json:"process"`
-	GameXPath string   `json:"gamexpath"`
 }
 
 // yearning消息struct
@@ -116,18 +85,20 @@ type Text struct {
 }
 
 // 发送钉钉消息格式 Msg  josn格式模板
-// message = """{
-//     "at": {
-//         "atMobiles":[
-//             "15555555555"
-//         ],
-//         "isAtAll": false
-//     },
-//     "text": {
-//         "content":"test"
-//     },
-//     "msgtype":"text"
-// }"""
+//
+//	message = """{
+//	    "at": {
+//	        "atMobiles":[
+//	            "15555555555"
+//	        ],
+//	        "isAtAll": false
+//	    },
+//	    "text": {
+//	        "content":"test"
+//	    },
+//	    "msgtype":"text"
+//	}"""
+//
 // 发送钉钉消息格式 Msg
 type Msg struct {
 	Msgtype string                `json:"msgtype,omitempty"`
@@ -136,29 +107,30 @@ type Msg struct {
 }
 
 // alertmanager 官方接口发送数据的类型
-// {
-// 	"version": "4",
-// 	"groupKey": <string>,              // key identifying the group of alerts (e.g. to deduplicate)
-// 	"truncatedAlerts": <int>,          // how many alerts have been truncated due to "max_alerts"
-// 	"status": "<resolved|firing>",
-// 	"receiver": <string>,
-// 	"groupLabels": <object>,
-// 	"commonLabels": <object>,
-// 	"commonAnnotations": <object>,
-// 	"externalURL": <string>,           // backlink to the Alertmanager.
-// 	"alerts": [
-// 	  {
-// 		"status": "<resolved|firing>",
-// 		"labels": <object>,
-// 		"annotations": <object>,
-// 		"startsAt": "<rfc3339>",
-// 		"endsAt": "<rfc3339>",
-// 		"generatorURL": <string>,      // identifies the entity that caused the alert
-// 		"fingerprint": <string>        // fingerprint to identify the alert
-// 	  },
-// 	  ...
-// 	]
-//   }
+//
+//	{
+//		"version": "4",
+//		"groupKey": <string>,              // key identifying the group of alerts (e.g. to deduplicate)
+//		"truncatedAlerts": <int>,          // how many alerts have been truncated due to "max_alerts"
+//		"status": "<resolved|firing>",
+//		"receiver": <string>,
+//		"groupLabels": <object>,
+//		"commonLabels": <object>,
+//		"commonAnnotations": <object>,
+//		"externalURL": <string>,           // backlink to the Alertmanager.
+//		"alerts": [
+//		  {
+//			"status": "<resolved|firing>",
+//			"labels": <object>,
+//			"annotations": <object>,
+//			"startsAt": "<rfc3339>",
+//			"endsAt": "<rfc3339>",
+//			"generatorURL": <string>,      // identifies the entity that caused the alert
+//			"fingerprint": <string>        // fingerprint to identify the alert
+//		  },
+//		  ...
+//		]
+//	  }
 type AlertmanagerMsg struct {
 	Version         string            `json:"version,omitempty"`
 	GroupKey        string            `json:"groupKey,omitempty"`

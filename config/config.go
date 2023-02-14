@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"fmt"
+	"github.com/mlonV/dingtalk/types"
 	"github.com/mlonV/tools/loger"
 	"github.com/spf13/viper"
 	"os"
@@ -14,7 +15,7 @@ var (
 	fileName string
 	Port     string
 	h        bool
-	Conf     *DingtalkConfig
+	Conf     *types.DingtalkConfig
 	Log      *loger.Loger
 )
 

@@ -2,12 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	// "github.com/mlonV/dingtalk/config"
 )
 
+// 发送到玎钉机器人
 func SendMsg(url string, data []byte) (body []byte, err error) {
 	header := map[string]string{
 		"Content-type":  "application/json;charset=UTF-8",
@@ -32,7 +33,7 @@ func SendMsg(url string, data []byte) (body []byte, err error) {
 	}
 	resp, _ := client.Do(req)
 
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 
 		return nil, fmt.Errorf("read body err : %s", err)

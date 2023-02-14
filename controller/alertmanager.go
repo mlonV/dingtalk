@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mlonV/dingtalk/config"
+	"github.com/mlonV/dingtalk/types"
 	"github.com/mlonV/dingtalk/utils"
 )
 
@@ -21,7 +22,7 @@ func (a AlterController) GetIndex(ctx *gin.Context) {
 
 func (a AlterController) SendMsg(ctx *gin.Context) {
 
-	alertmanagerMsg := &config.AlertmanagerMsg{}
+	alertmanagerMsg := &types.AlertmanagerMsg{}
 	ctx.ShouldBindJSON(alertmanagerMsg)
 	config.Log.Info("绑定altermanager结构体的内容: %#v", alertmanagerMsg)
 	for _, alertMsg := range alertmanagerMsg.Alerts {
@@ -54,10 +55,10 @@ func (a AlterController) SendMsg(ctx *gin.Context) {
 						sendAlertMsg += fmt.Sprintf(", @%s ", v)
 					}
 				}
-				// DingData := &config.Msg{Msgtype: "text", At: config.At{AtMobiles: confList.AtMobiles}, Text: config.Text{Content: sendAlertMsg}}
+				// DingData := &types.Msg{Msgtype: "text", At: types.At{AtMobiles: confList.AtMobiles}, Text: types.Text{Content: sendAlertMsg}}
 
 				// 发送钉钉数据的结构
-				DingData := &config.Msg{}
+				DingData := &types.Msg{}
 				DingData.Msgtype = "text"
 				DingData.At.AtMobiles = confList.AtMobiles
 				DingData.At.IsAtAll = confList.IsAtAll

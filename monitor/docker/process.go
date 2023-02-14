@@ -13,12 +13,13 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/mlonV/dingtalk/config"
 	"github.com/mlonV/dingtalk/prome"
+	"github.com/mlonV/dingtalk/types"
 	"github.com/mlonV/dingtalk/utils"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
-	dm config.MonitorDocker
+	dm types.MonitorDocker
 
 	// 全局的sync.Map 放dockerID和ProcessStatus结构体
 	dMap   sync.Map

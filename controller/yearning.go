@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mlonV/dingtalk/config"
+	"github.com/mlonV/dingtalk/types"
 	"github.com/mlonV/dingtalk/utils"
 )
 
@@ -17,7 +18,7 @@ func (yc YearningController) SendYearning(ctx *gin.Context) {
 
 	// yearningData := &config.Msg{"msgtype": "markdown", "markdown": {"title": "Yearning sql审计平台", "text": "%s"}}
 	// 从yearning的webhook Post过来的数据
-	yearningData := &config.YearningMsg{}
+	yearningData := &types.YearningMsg{}
 	ctx.ShouldBindJSON(&yearningData)
 	fmt.Println(yearningData.Text)
 	// 读取配置文件的yearning配置

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mlonV/dingtalk/config"
+	"github.com/mlonV/dingtalk/types"
 	"github.com/mlonV/dingtalk/utils"
 	"github.com/mlonV/tools/loger"
 	"github.com/olivere/elastic/v7"
@@ -19,7 +20,7 @@ var (
 	eslog    *loger.Loger
 	err      error
 	ticker   *time.Ticker
-	esalarm  *config.ESAlarm
+	esalarm  *types.ESAlarm
 )
 
 // 写死的message
@@ -56,15 +57,15 @@ func elkInit() {
 	}
 }
 
-func NewAlarmStatus() config.AlarmStatus {
-	return config.AlarmStatus{
+func NewAlarmStatus() types.AlarmStatus {
+	return types.AlarmStatus{
 		AlarmCount: 0,
 		IsAlarm:    false,
 	}
 }
 
 // 负责处理查询，告警恢复等
-func worker(q config.Query, as *config.AlarmStatus) {
+func worker(q types.Query, as *types.AlarmStatus) {
 	// 1.先查询
 	if q.SendMsgNum == 0 { // 默认查询两条
 		q.SendMsgNum = 2
@@ -94,7 +95,7 @@ func worker(q config.Query, as *config.AlarmStatus) {
 }
 
 // Query 查询
-func query(ql config.Query, esC *elastic.Client) (*elastic.SearchResult, error) {
+func query(ql types.Query, esC *elastic.Client) (*elastic.SearchResult, error) {
 
 	// 时间范围默认一分钟
 	if ql.TimeRange == 0 {
@@ -120,7 +121,7 @@ func query(ql config.Query, esC *elastic.Client) (*elastic.SearchResult, error) 
 }
 
 // 告警发送
-func trigger(ql config.Query, res *elastic.SearchResult, as *config.AlarmStatus) {
+func trigger(ql types.Query, res *elastic.SearchResult, as *types.AlarmStatus) {
 
 	// 需要发送的消息
 	msgList := []string{
@@ -150,7 +151,7 @@ func alarm(url, secret, msg string) {
 
 	sendurl := utils.GetSendUrl(url, secret)
 	// 发送钉钉数据的结构
-	DingData := &config.Msg{}
+	DingData := &types.Msg{}
 	DingData.Msgtype = "text"
 	DingData.Text.Content = msg
 
@@ -168,7 +169,7 @@ func alarm(url, secret, msg string) {
 func Ticker() {
 	elkInit()
 	for _, q := range esalarm.QueryList {
-		go func(q config.Query) {
+		go func(q types.Query) {
 			interval := time.Second * time.Duration(q.Interval)
 			ticker = time.NewTicker(interval)
 
