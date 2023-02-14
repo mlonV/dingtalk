@@ -16,7 +16,6 @@ type DingtalkConfig struct {
 
 // Sentry dingding告警的地址
 type Sentry struct {
-	DingGroup []DingNotify `json:"dinggroup"` //钉钉告警组
 }
 
 // 日志设置 struct

@@ -36,16 +36,18 @@ func (sc *SentryController) WebHook(ctx *gin.Context) {
 	DingData.Msgtype = "text"
 	DingData.Text.Content = strings.Join(msgList, "\n")
 	data, _ := json.Marshal(DingData)
-	for _, ding := range config.Conf.Sentry.DingGroup {
-		sendUrl := utils.GetSendUrl(ding.DingURL, ding.Dingsecret)
 
-		body, err := utils.SendMsg(sendUrl, data)
-		if err != nil {
-			config.Log.Error("Sentry SendMsg Error: %s", err)
-		}
-		config.Log.Debug("发送的dingUrl: %s \n发送的数据: %s\n返回的body: %s\n", sendUrl, string(data), string(body))
+	// 获取Url后面参数（钉钉的access_token和secret  因为发送URL的a
+	access_token := ctx.Query("access_token")
+	DingURL := "https://oapi.dingtalk.com/robot/send?access_token=" + access_token
+	secret := ctx.Query("secret")
+	sendUrl := utils.GetSendUrl(DingURL, secret)
 
+	body, err := utils.SendMsg(sendUrl, data)
+	if err != nil {
+		config.Log.Error("Sentry SendMsg Error: %s", err)
 	}
+	config.Log.Debug("发送的dingUrl: %s \n发送的数据: %s\n返回的body: %s\n", sendUrl, string(data), string(body))
 
 	// fmt.Println(data)
 	ctx.String(http.StatusOK, "sentry ok")

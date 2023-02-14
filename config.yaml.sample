@@ -103,3 +103,6 @@ rediskey:
     port: 6379
     keys: ["queues:*[^notify]"]
     interval: 10
+
+# 发送sentry webhook使用
+sentry:
