@@ -41,39 +41,39 @@ func (a AlterController) SendMsg(ctx *gin.Context) {
 		)
 
 		for _, confList := range config.Conf.Alertmanager {
-			confJob := confList.Job
+			// confJob := confList.Job
 			confSecret := confList.Secret
 			confUrl := confList.Url
 
 			sendurl := utils.GetSendUrl(confUrl, confSecret)
 			// 根据prometheus里面设置的job名和配置文件里面的job名来分别发送不同群聊
-			if confJob == alertMsg.Labels["job"] {
-				sendAlertMsg := strings.Join(msgList, "\n")
-				// 如果有@全体，则不单独@个人(需要吧@+手机号写入到发送的信息里，有at全体的话则不生效)
-				if !confList.IsAtAll {
-					for _, v := range confList.AtMobiles {
-						sendAlertMsg += fmt.Sprintf(", @%s ", v)
-					}
+			// if confJob == alertMsg.Labels["job"] {
+			sendAlertMsg := strings.Join(msgList, "\n")
+			// 如果有@全体，则不单独@个人(需要吧@+手机号写入到发送的信息里，有at全体的话则不生效)
+			if !confList.IsAtAll {
+				for _, v := range confList.AtMobiles {
+					sendAlertMsg += fmt.Sprintf(", @%s ", v)
 				}
-				// DingData := &types.Msg{Msgtype: "text", At: types.At{AtMobiles: confList.AtMobiles}, Text: types.Text{Content: sendAlertMsg}}
-
-				// 发送钉钉数据的结构
-				DingData := &types.Msg{}
-				DingData.Msgtype = "text"
-				DingData.At.AtMobiles = confList.AtMobiles
-				DingData.At.IsAtAll = confList.IsAtAll
-				DingData.Text.Content = sendAlertMsg
-
-				data, _ := json.Marshal(DingData)
-				// 真正发送消息的地方
-				body, err := utils.SendMsg(sendurl, data)
-				config.Log.Info("发送的数据URL: %s ,发送的数据: %s", sendurl, data)
-
-				if err != nil {
-					config.Log.Fatal("send dingtalk err : ", err)
-				}
-				config.Log.Info(string(body))
 			}
+			// DingData := &types.Msg{Msgtype: "text", At: types.At{AtMobiles: confList.AtMobiles}, Text: types.Text{Content: sendAlertMsg}}
+
+			// 发送钉钉数据的结构
+			DingData := &types.Msg{}
+			DingData.Msgtype = "text"
+			DingData.At.AtMobiles = confList.AtMobiles
+			DingData.At.IsAtAll = confList.IsAtAll
+			DingData.Text.Content = sendAlertMsg
+
+			data, _ := json.Marshal(DingData)
+			// 真正发送消息的地方
+			body, err := utils.SendMsg(sendurl, data)
+			config.Log.Info("发送的数据URL: %s ,发送的数据: %s", sendurl, data)
+
+			if err != nil {
+				config.Log.Fatal("send dingtalk err : ", err)
+			}
+			config.Log.Info(string(body))
+			// }
 		}
 
 	}
