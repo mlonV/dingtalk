@@ -24,6 +24,12 @@ alertmanager:
     secret: "xxx"
     AtMobiles: ["155xxxxxxx"]
     isAtAll: false
+    isDefault: true   #默认都发送这个里面（有对应job的发送对应的
+  - job: "job2"    # 这个要和prometheus里面的job_name一样
+    url: "https://oapi.dingtalk.com/robot/send?access_token=xxx"
+    secret: "xxx"
+    AtMobiles: ["155xxxxxxx"]
+    isAtAll: false
 
 
 # 添加机器人配置，dingding机器人的url和secret .

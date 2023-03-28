@@ -66,7 +66,7 @@ func Ticker() {
 	// interval := time.Duration(esalarm.Time) * time.Minute
 	interval := time.Second * time.Duration(dm.Interval)
 	ticker = time.NewTicker(interval)
-	config.Log.Info("Start Monitor Process/PID ,Interval: %ds ", dm.Interval)
+	config.Log.Debug("Start Monitor Process/PID ,Interval: %ds ", dm.Interval)
 	for {
 		// 调用Reset方法对timer对象进行定时器重置
 		// 	ticker.Reset(interval)
@@ -163,7 +163,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, addr string) error {
 			// 先判断是不是gamex的容器（gamex的容器名都是gamex开头），如果是gamex则按照gamex处理
 			process := dm.Process
 			if IsGameX(containerName) {
-				config.Log.Info("当前ContainerName: %s处理gamex的获取流程,设置dm.Process = %s", containerName, dm.GameXPath)
+				config.Log.Debug("当前ContainerName: %s处理gamex的获取流程,设置dm.Process = %s", containerName, dm.GameXPath)
 				process = dm.GameXPath
 			}
 			pidCmd := []string{"bash", "-c", fmt.Sprintf(`ps -ef|grep "%s" |grep -v grep|awk '{print $2}'`, process)}
@@ -180,7 +180,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, addr string) error {
 			psname = strings.Split(psname, "\n")[0]
 
 			config.Log.Debug("当前隐藏字符集 %#v,%#v,process: %s", pid, psname, process)
-			config.Log.Info("当前ContainerName [%s], PID : [%s], ProcessName : [%s]", ps.ContainerName, pid, psname)
+			config.Log.Debug("当前ContainerName [%s], PID : [%s], ProcessName : [%s]", ps.ContainerName, pid, psname)
 
 			// 查不出来进程挂掉,Alive !=-1则是已经添加到Map的情况
 			if ps.Alive == 0 && (pid == "" || psname == "") {
@@ -265,8 +265,8 @@ func IsGameX(cname string) bool {
 	}
 	s := reg.FindAllString(cname, 10)
 	if s != nil {
-		config.Log.Info("%s is Gamex ", cname)
-		config.Log.Info("%#v", s)
+		config.Log.Debug("%s is Gamex ", cname)
+		config.Log.Debug("%#v", s)
 		return true
 	}
 	return false
@@ -281,11 +281,11 @@ func HandleChan(psChan chan ProcessStatus) {
 		prome.PromeRegister.Register(ps.PromePIDGauge)
 		if ps.Alive == 0 {
 			// 启动通知
-			config.Log.Warning("process up by HandleChan : %#v", ps)
+			config.Log.Debug("process up by HandleChan : %#v", ps)
 		}
 		if ps.Alive == 1 {
 			// 挂掉告警
-			config.Log.Warning("process down by HandleChan : %#v", ps)
+			config.Log.Debug("process down by HandleChan : %#v", ps)
 		}
 	}
 }

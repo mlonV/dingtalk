@@ -161,4 +161,5 @@ type Alertmanager struct {
 	Secret    string   `json:"secret,omitempty"`
 	AtMobiles []string `json:"atMobiles,omitempty"`
 	IsAtAll   bool     `json:"isAtAll,omitempty"`
+	IsDefault bool     `json:"isDefault,omitempty"`
 }

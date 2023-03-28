@@ -66,7 +66,7 @@ func Handler() {
 				continue
 			}
 			metrics.RedisGauge.Set(float64(ic.Val()))
-			config.Log.Info("metrics.RedisGauge.Set Key %s: %d ", metrics.RedisKeyName, ic.Val())
+			config.Log.Debug("metrics.RedisGauge.Set Key %s: %d ", metrics.RedisKeyName, ic.Val())
 		}
 	}
 }
@@ -82,7 +82,7 @@ func worker() {
 		for _, key := range s {
 			// 如果是空的话就新设置一个 map[string]*Metrics
 			if metricsMap[regexpKey][key] == nil {
-				config.Log.Info("metricsMap[%s][%s] : %v \n", regexpKey, key, metricsMap[regexpKey][key])
+				config.Log.Debug("metricsMap[%s][%s] : %v \n", regexpKey, key, metricsMap[regexpKey][key])
 				metrics := &Metrics{
 					RedisCli:           redisCli,
 					RedisRegexpKeyName: regexpKey,
@@ -96,7 +96,7 @@ func worker() {
 			}
 		}
 	}
-	config.Log.Info("rmList ALL : %#v \n", metricsMap)
+	config.Log.Debug("metricsMap ALL : %#v \n", metricsMap)
 
 	// 处理map所有的数据
 	Handler()
