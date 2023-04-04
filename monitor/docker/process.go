@@ -131,7 +131,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, addr string) error {
 						Help:      "容器内进程存活指标 is Alive",
 						ConstLabels: map[string]string{
 							"app":      "game",
-							"hostname": info.Name,
+							"host":     info.Name,
 							"address":  addr,
 							"app_name": ps.ContainerName,
 						},
@@ -146,7 +146,7 @@ func GetRunningDockerInfo(dockerCli *client.Client, addr string) error {
 						Help:      "容器内进程存活指标 is Alive",
 						ConstLabels: map[string]string{
 							"app":      "game",
-							"hostname": info.Name,
+							"host":     info.Name,
 							"address":  addr,
 							"app_name": ps.ContainerName,
 						},
