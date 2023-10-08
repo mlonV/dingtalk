@@ -1,0 +1,10 @@
+version: '0.0.1'
+services:
+  dingtalk:
+    build: 
+      context: ./
+      dockerfile: dockerfile
+    image: dingtalk:0.0.1
+    container_name: dingtalk
+    ports:
+      - 5000:5000

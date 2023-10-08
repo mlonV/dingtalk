@@ -1,0 +1,5 @@
+FROM alpine:latest
+COPY ../config.yaml.sample /data/config.yaml
+COPY ../dingtalk /data
+WORKDIR /data
+CMD [ "/data/dingtalk" ]
