@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dingtalk
+  name: dingtalk
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: dingtalk
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: dingtalk
+    spec:
+      containers:
+      - image: 192.168.71.199:80/project/dingtalk:t20231010
+        imagePullPolicy: Always
+        name: dingtalk
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: harbor
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dingtalk
+  name: dingtalk
+  namespace: default
+spec:
+  ports:
+  - nodePort: 27712
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: dingtalk
+  sessionAffinity: None
+  type: NodePort
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: default
+  name: nginx-ingress-dingtalk
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: test.nginx.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dingtalk
+            port: 
+              number: 5000
