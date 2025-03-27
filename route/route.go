@@ -1,12 +1,18 @@
 package route
 
 import (
+	"time"
+
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/mlonV/dingtalk/controller"
+	"github.com/mlonV/dingtalk/controller/super"
 	"github.com/mlonV/dingtalk/prome"
+	"github.com/mlonV/dingtalk/utils"
 )
 
 func RegisterRoutes() *gin.Engine {
+
 	router := gin.Default()
 
 	alertController := &controller.AlterController{}
@@ -35,5 +41,32 @@ func RegisterRoutes() *gin.Engine {
 	sc := &controller.SentryController{}
 	router.POST("/sentry/text", sc.WebHookForText)
 	router.POST("/sentry/markdown", sc.WebHookForMarkdown)
+
+	// supervisor
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:9528"}, // vue-element-admin 默认端口
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+	g := router.Group("api")
+	g.POST("/login", super.Login)
+
+	g.Use(utils.AuthMiddleware())
+
+	g.GET("/info", super.UserInfo)
+	g.POST("/logout", super.LogOut)
+
+	g.GET("/supervisor/list", super.ListHost)
+	g.POST("/supervisor/addhost", super.AddHost)
+	g.DELETE("/supervisor/host/:id", super.DelHost)
+	g.PATCH("/supervisor/host", super.UpdateHost)
+
+	// g.GET("/supervisor/status", super.GetSupervisorStatus)
+	g.POST("/supervisor/start/:processname", super.StartProcess)
+
 	return router
 }
