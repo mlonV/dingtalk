@@ -15,6 +15,21 @@ type Param struct {
 }
 
 type Value struct {
+	Struct  Struct `xml:"struct"`
+	Array   Array  `xml:"array"`
+	Boolean int    `xml:"boolean"`
+}
+
+type Array struct {
+	Data Data `xml:"data"`
+}
+
+// GetetAllProcessInfo use
+type Data struct {
+	Value []AllProcessValue `xml:"value"`
+}
+
+type AllProcessValue struct {
 	Struct Struct `xml:"struct"`
 }
 
@@ -38,33 +53,18 @@ type ReqParam struct {
 	Value string `xml:"value>string"`
 }
 
-// // UnmarshalXML 解析 member 中的 value
-// func (m *Member) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-// 	type T Member
-// 	var t T
-// 	if err := d.DecodeElement(&t, &start); err != nil {
-// 		return err
-// 	}
+// 响应结构体
 
-// 	*m = Member{
-// 		Name: t.Name,
-// 	}
+// MethodResponseSuccess 定义成功响应结构体
+type MethodResponseSuccess struct {
+	Params Params `xml:"params"`
+}
 
-// 	// 解析 value 的类型
-// 	var value struct {
-// 		Int    *XmlIntValue    `xml:"int"`
-// 		String *XmlStringValue `xml:"string"`
-// 	}
+// MethodResponseFault 定义错误响应结构体
+type MethodResponseFault struct {
+	Fault Fault `xml:"fault"`
+}
 
-// 	if err := d.DecodeElement(&value, &start); err != nil {
-// 		return err
-// 	}
-
-// 	if value.Int != nil {
-// 		m.Value = value.Int
-// 	} else if value.String != nil {
-// 		m.Value = value.String
-// 	}
-
-// 	return nil
-// }
+type Fault struct {
+	Value Value `xml:"value"`
+}

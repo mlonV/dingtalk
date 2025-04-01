@@ -13,7 +13,7 @@ import (
 
 var (
 	jwtKey      = []byte("supervisor")
-	tokenExpire = time.Hour * 1
+	tokenExpire = time.Hour * 6
 )
 
 // GenerateToken 生成 JWT token

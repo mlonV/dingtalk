@@ -4,9 +4,9 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-resty/resty/v2"
 	"github.com/mlonV/dingtalk/config"
 	"github.com/mlonV/dingtalk/types/supervisor"
 	"gorm.io/gorm"
@@ -14,31 +14,179 @@ import (
 
 var Supervisors = &config.Conf.Supervisors
 
+func GetetAllProcessInfo(c *gin.Context) {
+	hosts, err := GetHosts()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var processList supervisor.ProcessInfoList
+
+	for index, host := range hosts {
+		resp, err := host.SuperReq("supervisor.getAllProcessInfo", []supervisor.ReqParam{})
+		if err != nil {
+			// host.Status = err.Error()
+			// hosts = append(hosts, host)
+		}
+
+		var methodResponse supervisor.MethodResponse
+		if err := xml.Unmarshal(resp.Body(), &methodResponse); err != nil {
+			fmt.Println("Error unmarshalling XML:", err)
+		}
+		var process supervisor.ProcessInfo
+		process.ID = index + 1
+		process.Host = host.Name
+		process.Name = "-"
+		process.Statename = "-"
+		process.Description = fmt.Sprintf("主机: %s ,进程数量: %d", host.Name, len(methodResponse.Params.Param.Value.Array.Data.Value))
+		for k, v := range methodResponse.Params.Param.Value.Array.Data.Value {
+			var processChildren supervisor.ProcessInfo
+			processChildren.ID = ((index + 1) * 1000) + k
+			processChildren.Host = host.Name
+			for _, member := range v.Struct.Members {
+				switch member.Name {
+				case "name":
+					processChildren.Name = member.Value
+				case "group":
+					processChildren.Group = member.Value
+				case "statename":
+					processChildren.Statename = member.Value
+				case "spawnerr":
+					processChildren.Spawnerr = member.Value
+				case "exitstatus":
+					processChildren.Exitstatus = member.Code
+				case "pid":
+					processChildren.Pid = member.Code
+				case "logfile":
+					processChildren.Logfile = member.Value
+				case "stdout_logfile":
+					processChildren.Stdout_logfile = member.Value
+				case "stderr_logfile":
+					processChildren.Stderr_logfile = member.Value
+				case "state":
+					processChildren.State = member.Code
+				case "now":
+					processChildren.Now = member.Value
+				case "start":
+					processChildren.Start = member.Code
+				case "stop":
+					processChildren.Stop = member.Code
+				case "description":
+					processChildren.Description = member.Value
+				}
+			}
+			process.Children = append(process.Children, processChildren)
+		}
+		processList.Items = append(processList.Items, process)
+		// fmt.Println(string(resp.Body()), err)
+		// fmt.Println(processList, err)
+	}
+	c.JSON(http.StatusOK, supervisor.Response{
+		Code:    0,
+		Data:    processList,
+		Message: "主机process列表已解析 0.0",
+	})
+}
+
 func StartProcess(c *gin.Context) {
-	client := resty.New()
-	processname, ok := c.Params.Get("processname")
-	if !ok {
+	hostname, ok1 := c.Params.Get("host")
+	processname, ok2 := c.Params.Get("name")
+	if !ok1 || !ok2 {
 		c.String(http.StatusOK, "processname 参数异常")
 		return
 	}
-	// reqBody := SupervisorRequest{Method: "supervisor.getAllProcessInfo"}
-	reqBody := supervisor.SupervisorRequest{Method: "supervisor.startProcess", Params: []supervisor.ReqParam{{Value: processname}}}
-	reqXML, _ := xml.Marshal(reqBody)
-	reqBody.Params = []supervisor.ReqParam{{Value: c.Query("process")}}
-	resp, err := client.R().
-		SetHeader("Content-Type", "text/xml").
-		SetBasicAuth("super", "Super@123").
-		SetBody(reqXML).
-		Post("http://172.31.1.243:9001/RPC2")
 
+	host, err := GetHostByHostname(hostname)
 	if err != nil {
-		fmt.Println(resp.Body(), err)
+		fmt.Println(err)
 	}
-	c.String(200, resp.String())
+	ok, err := host.StartProcess(processname)
+
+	if err != nil || !ok {
+		c.JSON(http.StatusOK, supervisor.Response{
+			Code:    0,
+			Data:    "",
+			Type:    "error",
+			Message: fmt.Sprintf("请求启动失败" + err.Error()),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, supervisor.Response{
+		Code:    0,
+		Data:    "",
+		Type:    "success",
+		Message: fmt.Sprintf("启动成功 :  host: %s , process: %s  ", hostname, processname),
+	})
 }
 
-func GetSupervisorList(c *gin.Context) {
-	c.JSON(http.StatusOK, Supervisors)
+func StopProcess(c *gin.Context) {
+	hostname, ok1 := c.Params.Get("host")
+	processname, ok2 := c.Params.Get("name")
+	if !ok1 || !ok2 {
+		c.String(http.StatusOK, "processname 参数异常")
+		return
+	}
+
+	host, err := GetHostByHostname(hostname)
+	if err != nil {
+		fmt.Println(err)
+	}
+	ok, err := host.StopProcess(processname)
+	if err != nil || !ok {
+		c.JSON(http.StatusOK, supervisor.Response{
+			Code:    0,
+			Data:    "",
+			Type:    "error",
+			Message: fmt.Sprintf("请求停止失败" + err.Error()),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, supervisor.Response{
+		Code:    0,
+		Data:    "",
+		Type:    "success",
+		Message: fmt.Sprintf("停止成功 :  host: %s , process: %s  ", hostname, processname),
+	})
+}
+
+// todo --
+func TailStdoutLog(c *gin.Context) {
+	hostname, ok1 := c.Params.Get("host")
+	processName, ok2 := c.Params.Get("name")
+	if !ok1 || !ok2 {
+		c.String(http.StatusOK, "processname 参数异常")
+		return
+	}
+	offsetStr := c.DefaultQuery("offset", "0")
+	lengthStr := c.DefaultQuery("length", "1024") // 每次最多读取 1024 字节
+
+	host, err := GetHostByHostname(hostname)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// 参数转换
+	offset, _ := strconv.Atoi(offsetStr)
+	length, _ := strconv.Atoi(lengthStr)
+
+	host.TailProcessStdoutLog(processName, offset, length)
+}
+
+func GetHosts() ([]supervisor.HostData, error) {
+	var hosts []supervisor.HostData
+	result := db.Find(&hosts)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return hosts, nil
+}
+
+func GetHostByHostname(hostname string) (*supervisor.HostData, error) {
+	var host *supervisor.HostData
+	result := db.Where("name = ?", hostname).First(&host)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return host, nil
 }
 
 func AddHost(c *gin.Context) {

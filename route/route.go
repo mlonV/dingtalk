@@ -66,7 +66,13 @@ func RegisterRoutes() *gin.Engine {
 	g.PATCH("/supervisor/host", super.UpdateHost)
 
 	// g.GET("/supervisor/status", super.GetSupervisorStatus)
-	g.POST("/supervisor/start/:processname", super.StartProcess)
+	g.GET("/supervisor/process/all", super.GetetAllProcessInfo)
+
+	// control process
+	g.POST("/supervisor/process/start/host/:host/name/:name", super.StartProcess)
+	g.POST("/supervisor/process/stop/host/:host/name/:name", super.StopProcess)
+	// log
+	g.GET("/supervisor/process/stop/host/:host/name/:name", super.TailStdoutLog)
 
 	return router
 }

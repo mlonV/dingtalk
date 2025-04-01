@@ -31,6 +31,7 @@ func (User) TableName() string {
 type Response struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
+	Type    string      `json:"type"`
 	Data    interface{} `json:"data"`
 }
 
