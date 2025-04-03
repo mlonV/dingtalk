@@ -154,11 +154,11 @@ func getUserByName(username string) (*supervisor.User, error) {
 	return &dbUser, err
 }
 
-func addUser(username, password string) error {
-	var user = supervisor.User{Username: username, Password: password}
-	result := db.Create(&user)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
-}
+// func addUser(username, password string) error {
+// 	var user = supervisor.User{Username: username, Password: password}
+// 	result := db.Create(&user)
+// 	if result.Error != nil {
+// 		return result.Error
+// 	}
+// 	return nil
+// }

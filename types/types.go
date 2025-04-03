@@ -7,16 +7,16 @@ import (
 
 // 加载配置文件用
 type DingtalkConfig struct {
-	ESAlarm       ESAlarm                 `yaml:"esalarm"`
-	AlarmStatus                           //告警状态
-	Yearning      []Yearning              `json:"yearning,omitempty"`
-	MonitorDocker MonitorDocker           `json:"monitordocker,omitempty"`
-	Alertmanager  []Alertmanager          `json:"alertmanager,omitempty"`
-	RedisKey      RedisKey                `json:"rediskey,omitempty"`
-	LogSet        LogSet                  `json:"logset,omitempty"`
-	Sentry        Sentry                  `json:"sentry,omitempty"`
-	Supervisors   []supervisor.Supervisor `json:"supervisors"`
-	Mysql         supervisor.Mysql        `json:"mysql,omitempty"`
+	ESAlarm       ESAlarm          `yaml:"esalarm"`
+	AlarmStatus                    //告警状态
+	Yearning      []Yearning       `json:"yearning,omitempty"`
+	MonitorDocker MonitorDocker    `json:"monitordocker,omitempty"`
+	Alertmanager  []Alertmanager   `json:"alertmanager,omitempty"`
+	RedisKey      RedisKey         `json:"rediskey,omitempty"`
+	DnsQuery      DnsQuery         `json:"dnsquery,omitempty"`
+	LogSet        LogSet           `json:"logset,omitempty"`
+	Sentry        Sentry           `json:"sentry,omitempty"`
+	Mysql         supervisor.Mysql `json:"mysql,omitempty"`
 }
 
 // Sentry dingding告警的地址

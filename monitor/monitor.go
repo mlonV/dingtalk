@@ -1,7 +1,10 @@
 package monitor
 
 import (
+	"context"
+
 	"github.com/mlonV/dingtalk/config"
+	"github.com/mlonV/dingtalk/monitor/dns_query"
 	der "github.com/mlonV/dingtalk/monitor/docker"
 	"github.com/mlonV/dingtalk/monitor/elk"
 	"github.com/mlonV/dingtalk/monitor/rediskey"
@@ -26,5 +29,10 @@ func init() {
 	if config.Conf.RedisKey.IsOpen {
 		config.Log.Info("开启Redis QueueKey 功能 , isopen: %t", config.Conf.RedisKey.IsOpen)
 		go rediskey.Ticker()
+	}
+
+	if config.Conf.DnsQuery.IsOpen {
+		config.Log.Info("开启DNS Query 功能 , isopen: %t", true)
+		go dnsquery.StartDNSQueryWorker(context.Background())
 	}
 }

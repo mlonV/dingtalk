@@ -3,17 +3,14 @@ package supervisor
 import (
 	"encoding/xml"
 	"fmt"
+	"net/http"
+	"regexp"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
+	"github.com/gorilla/websocket"
 )
-
-type Supervisor struct {
-	Name     string `yaml:"name"`
-	URL      string `yaml:"url"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-}
 
 const (
 	FATAL      string = "FATAL"
@@ -81,10 +78,10 @@ func (HostData) TableName() string {
 }
 
 func (sl *SuperList) AddStatus() {
-	var hosts []HostData
-	for _, host := range sl.Items {
+	// var hosts []HostData
+	for index, host := range sl.Items {
 
-		client := resty.New().SetTimeout(2 * time.Second)
+		client := resty.New().SetTimeout(1 * time.Second)
 		reqBody := SupervisorRequest{Method: "supervisor.getState", Params: []ReqParam{}}
 		reqXML, _ := xml.Marshal(reqBody)
 		resp, err := client.R().
@@ -94,8 +91,9 @@ func (sl *SuperList) AddStatus() {
 			Post(host.URL)
 
 		if err != nil {
-			host.Status = err.Error()
-			hosts = append(hosts, host)
+			sl.Items[index].Status = err.Error()
+			// host.Status = err.Error()
+			// hosts = append(hosts, host)
 			// fmt.Println(resp.Body(), err)
 			continue
 		}
@@ -103,24 +101,31 @@ func (sl *SuperList) AddStatus() {
 		var methodResponse MethodResponse
 		if err := xml.Unmarshal(resp.Body(), &methodResponse); err != nil {
 			// fmt.Println("Error unmarshalling XML:", err)
-			host.Status = err.Error()
-			hosts = append(hosts, host)
+			sl.Items[index].Status = err.Error()
+			// host.Status = err.Error()
+			// hosts = append(hosts, host)
 			continue
 		}
 		// 查找 statecode 的值
 		for _, member := range methodResponse.Params.Param.Value.Struct.Members {
 			if member.Name == "statename" {
-				host.Status = member.Value
-				hosts = append(hosts, host)
+				sl.Items[index].Status = member.Value
+				// hosts = append(hosts, host)
+				break
 			}
 		}
+		if sl.Items[index].Status == "" {
+			sl.Items[index].Status = "未查询到状态"
+		}
+		// hosts = append(hosts, host)
 	}
-	sl.Items = hosts
+	// sl.Items = hosts
 }
 
 // hostdata请求process列表
 func (hd *HostData) SuperReq(method string, params []ReqParam) (*resty.Response, error) {
 	client := resty.New()
+	client.SetTimeout(3 * time.Second)
 	reqBody := SupervisorRequest{Method: method, Params: params}
 	reqXML, _ := xml.Marshal(reqBody)
 
@@ -132,7 +137,7 @@ func (hd *HostData) SuperReq(method string, params []ReqParam) (*resty.Response,
 }
 
 func (hd *HostData) StartProcess(processName string) (bool, error) {
-	resp, err := hd.SuperReq("supervisor.startProcess", []ReqParam{{Value: processName}})
+	resp, err := hd.SuperReq("supervisor.startProcess", []ReqParam{{Value: ReqValue{StringValue: &processName}}})
 	if err != nil {
 		return false, err
 	}
@@ -161,7 +166,7 @@ func (hd *HostData) StartProcess(processName string) (bool, error) {
 
 func (hd *HostData) StopProcess(processName string) (bool, error) {
 
-	resp, err := hd.SuperReq("supervisor.stopProcess", []ReqParam{{Value: processName}})
+	resp, err := hd.SuperReq("supervisor.stopProcess", []ReqParam{{Value: ReqValue{StringValue: &processName}}})
 	if err != nil {
 		return false, err
 	}
@@ -190,13 +195,103 @@ func (hd *HostData) StopProcess(processName string) (bool, error) {
 
 func (hd *HostData) TailProcessStdoutLog(processName string, offset, length int) {
 	resp, err := hd.SuperReq("supervisor.tailProcessStdoutLog", []ReqParam{
-		{Value: processName},
-		{IntValue: offset},
-		{IntValue: length},
+		{Value: ReqValue{StringValue: &processName}},
+		{Value: ReqValue{IntValue: &offset}},
+		{Value: ReqValue{IntValue: &length}},
 	})
 	if err != nil {
 		// return false, err
 	}
 
-	fmt.Println(resp)
+	fmt.Println(resp.RawBody())
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func cleanXML(data []byte) []byte {
+	re := regexp.MustCompile(`[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]`)
+	return re.ReplaceAll(data, []byte{})
+}
+
+func (hd *HostData) StreamLogsWS(c *gin.Context, processName, method string) {
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+
+	offset := 0
+	length := 0
+
+	var logResponse LogResponse
+	resp, err := hd.SuperReq(method, []ReqParam{
+		{Value: ReqValue{StringValue: &processName}},
+		{Value: ReqValue{IntValue: &offset}},
+		{Value: ReqValue{IntValue: &length}},
+	})
+	if err := xml.Unmarshal(resp.Body(), &logResponse); err != nil {
+		fmt.Println("Error unmarshalling XML:", err)
+		return
+	}
+
+	offset = logResponse.Params.Param.Value.Array.Data.Values[1].IntValue - 1024 // 默认偏移量
+	length = 1024
+
+	// print(resp)
+	done := make(chan struct{})
+
+	// 处理 WebSocket 关闭事件
+	go func() {
+		defer close(done)
+		for {
+			_, _, err := conn.ReadMessage()
+			if err != nil {
+				fmt.Println("WebSocket closed:", err)
+				return
+			}
+		}
+	}()
+
+	for {
+		select {
+		case <-done:
+			fmt.Println("Stopping log stream due to WebSocket closure")
+			return
+		default:
+			resp, err := hd.SuperReq(method, []ReqParam{
+				{Value: ReqValue{StringValue: &processName}},
+				{Value: ReqValue{IntValue: &offset}},
+				{Value: ReqValue{IntValue: &length}},
+			})
+			if err != nil {
+				break
+			}
+
+			cleanedBody := cleanXML(resp.Body())
+
+			var logResponse LogResponse
+			if err := xml.Unmarshal(cleanedBody, &logResponse); err != nil {
+				// fmt.Println(string(resp.Body()))
+				fmt.Println("xml 解析 err : ", err)
+			}
+			if offset >= logResponse.Params.Param.Value.Array.Data.Values[1].IntValue || len(logResponse.Params.Param.Value.Array.Data.Values) < 2 {
+				time.Sleep(1000 * time.Millisecond)
+				continue
+			}
+
+			logs := logResponse.Params.Param.Value.Array.Data.Values[0].StringValue
+			length = logResponse.Params.Param.Value.Array.Data.Values[1].IntValue - offset
+			offset += length // 更新偏移量
+
+			if err := conn.WriteMessage(websocket.TextMessage, []byte(logs)); err != nil {
+				break
+			}
+
+			time.Sleep(1 * time.Second)
+		}
+	}
 }

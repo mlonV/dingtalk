@@ -4,15 +4,11 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mlonV/dingtalk/config"
 	"github.com/mlonV/dingtalk/types/supervisor"
 	"gorm.io/gorm"
 )
-
-var Supervisors = &config.Conf.Supervisors
 
 func GetetAllProcessInfo(c *gin.Context) {
 	hosts, err := GetHosts()
@@ -150,25 +146,23 @@ func StopProcess(c *gin.Context) {
 
 // todo --
 func TailStdoutLog(c *gin.Context) {
+	method := c.Query("method")
 	hostname, ok1 := c.Params.Get("host")
 	processName, ok2 := c.Params.Get("name")
 	if !ok1 || !ok2 {
 		c.String(http.StatusOK, "processname 参数异常")
 		return
 	}
-	offsetStr := c.DefaultQuery("offset", "0")
-	lengthStr := c.DefaultQuery("length", "1024") // 每次最多读取 1024 字节
+	// offsetStr := c.DefaultQuery("offset", "0")
+	// lengthStr := c.DefaultQuery("length", "1024") // 每次最多读取 1024 字节
 
 	host, err := GetHostByHostname(hostname)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	// 参数转换
-	offset, _ := strconv.Atoi(offsetStr)
-	length, _ := strconv.Atoi(lengthStr)
-
-	host.TailProcessStdoutLog(processName, offset, length)
+	// host.TailProcessStdoutLog(processName, offset, length)
+	host.StreamLogsWS(c, processName, method)
 }
 
 func GetHosts() ([]supervisor.HostData, error) {

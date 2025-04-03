@@ -50,7 +50,12 @@ type SupervisorRequest struct {
 }
 
 type ReqParam struct {
-	Value string `xml:"value>string"`
+	Value ReqValue `xml:"value"`
+}
+
+type ReqValue struct {
+	StringValue *string `xml:"string,omitempty"`
+	IntValue    *int    `xml:"int,omitempty"`
 }
 
 // 响应结构体
@@ -67,4 +72,33 @@ type MethodResponseFault struct {
 
 type Fault struct {
 	Value Value `xml:"value"`
+}
+
+// 日志
+type LogResponse struct {
+	Params LogParams `xml:"params"`
+}
+
+type LogParams struct {
+	Param LogParam `xml:"param"`
+}
+
+type LogParam struct {
+	Value LogValue `xml:"value"`
+}
+
+type LogValue struct {
+	Array LogArray `xml:"array"`
+}
+
+type LogArray struct {
+	Data LogData `xml:"data"`
+}
+type LogData struct {
+	Values []LogValues `xml:"value"`
+}
+
+type LogValues struct {
+	StringValue string `xml:"string"`
+	IntValue    int    `xml:"int"`
 }

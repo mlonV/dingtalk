@@ -8,7 +8,7 @@ import (
 	"github.com/mlonV/dingtalk/controller"
 	"github.com/mlonV/dingtalk/controller/super"
 	"github.com/mlonV/dingtalk/prome"
-	"github.com/mlonV/dingtalk/utils"
+	// "github.com/mlonV/dingtalk/utils"
 )
 
 func RegisterRoutes() *gin.Engine {
@@ -55,7 +55,8 @@ func RegisterRoutes() *gin.Engine {
 	g := router.Group("api")
 	g.POST("/login", super.Login)
 
-	g.Use(utils.AuthMiddleware())
+	// 暂时关闭验证
+	// g.Use(utils.AuthMiddleware())
 
 	g.GET("/info", super.UserInfo)
 	g.POST("/logout", super.LogOut)
@@ -72,7 +73,6 @@ func RegisterRoutes() *gin.Engine {
 	g.POST("/supervisor/process/start/host/:host/name/:name", super.StartProcess)
 	g.POST("/supervisor/process/stop/host/:host/name/:name", super.StopProcess)
 	// log
-	g.GET("/supervisor/process/stop/host/:host/name/:name", super.TailStdoutLog)
-
+	g.GET("/supervisor/process/log/host/:host/name/:name", super.TailStdoutLog)
 	return router
 }
