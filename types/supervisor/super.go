@@ -69,7 +69,8 @@ type ProcessInfo struct {
 	Description    string `json:"description"`
 
 	// 给vue用的树状表格
-	Children []ProcessInfo `json:"children,omitempty"`
+	HasChildren bool          `json:"hasChildren"`
+	Children    []ProcessInfo `json:"children,omitempty"`
 }
 
 // 明确指定表名为 user
@@ -81,20 +82,10 @@ func (sl *SuperList) AddStatus() {
 	// var hosts []HostData
 	for index, host := range sl.Items {
 
-		client := resty.New().SetTimeout(1 * time.Second)
-		reqBody := SupervisorRequest{Method: "supervisor.getState", Params: []ReqParam{}}
-		reqXML, _ := xml.Marshal(reqBody)
-		resp, err := client.R().
-			SetHeader("Content-Type", "text/xml").
-			SetBasicAuth(host.Username, host.Password).
-			SetBody(reqXML).
-			Post(host.URL)
-
+		resp, err := host.SuperReq("supervisor.getState", []ReqParam{})
 		if err != nil {
+			print("AddStatus SuperReq err: ", err)
 			sl.Items[index].Status = err.Error()
-			// host.Status = err.Error()
-			// hosts = append(hosts, host)
-			// fmt.Println(resp.Body(), err)
 			continue
 		}
 
@@ -294,4 +285,57 @@ func (hd *HostData) StreamLogsWS(c *gin.Context, processName, method string) {
 			time.Sleep(1 * time.Second)
 		}
 	}
+}
+
+func (hd *HostData) GetAllProcessInfo() (ProcessInfoList, error) {
+	resp, err := hd.SuperReq("supervisor.getAllProcessInfo", []ReqParam{})
+	if err != nil {
+		// host.Status = err.Error()
+		// hosts = append(hosts, host)
+	}
+
+	var methodResponse MethodResponse
+	if err := xml.Unmarshal(resp.Body(), &methodResponse); err != nil {
+		fmt.Println("Error unmarshalling XML:", err)
+	}
+	var pil ProcessInfoList
+	for k, v := range methodResponse.Params.Param.Value.Array.Data.Value {
+		var process ProcessInfo
+		process.ID = (hd.ID * 1000) + k
+		process.Host = hd.Name
+		for _, member := range v.Struct.Members {
+			switch member.Name {
+			case "name":
+				process.Name = member.Value
+			case "group":
+				process.Group = member.Value
+			case "statename":
+				process.Statename = member.Value
+			case "spawnerr":
+				process.Spawnerr = member.Value
+			case "exitstatus":
+				process.Exitstatus = member.Code
+			case "pid":
+				process.Pid = member.Code
+			case "logfile":
+				process.Logfile = member.Value
+			case "stdout_logfile":
+				process.Stdout_logfile = member.Value
+			case "stderr_logfile":
+				process.Stderr_logfile = member.Value
+			case "state":
+				process.State = member.Code
+			case "now":
+				process.Now = member.Value
+			case "start":
+				process.Start = member.Code
+			case "stop":
+				process.Stop = member.Code
+			case "description":
+				process.Description = member.Value
+			}
+		}
+		pil.Items = append(pil.Items, process)
+	}
+	return pil, nil
 }

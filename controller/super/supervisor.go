@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// 直接全部加载的
 func GetetAllProcessInfo(c *gin.Context) {
 	hosts, err := GetHosts()
 	if err != nil {
@@ -81,6 +82,71 @@ func GetetAllProcessInfo(c *gin.Context) {
 		Data:    processList,
 		Message: "主机process列表已解析 0.0",
 	})
+}
+
+// hasChildren 设置为true,请求另一个API来获取数据，单个主机的数据
+func GetAllProcessInfo_LazyLoad(c *gin.Context) {
+	hosts, err := GetHosts()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var processList supervisor.ProcessInfoList
+
+	for index, host := range hosts {
+		resp, err := host.SuperReq("supervisor.getAllProcessInfo", []supervisor.ReqParam{})
+		if err != nil {
+			// host.Status = err.Error()
+			// hosts = append(hosts, host)
+		}
+
+		var methodResponse supervisor.MethodResponse
+		if err := xml.Unmarshal(resp.Body(), &methodResponse); err != nil {
+			fmt.Println("Error unmarshalling XML:", err)
+		}
+		var process supervisor.ProcessInfo
+		process.ID = index + 1
+		process.Host = host.Name
+		process.Name = "-"
+		process.Statename = "-"
+		process.Description = fmt.Sprintf("主机: %s ,进程数量: %d", host.Name, len(methodResponse.Params.Param.Value.Array.Data.Value))
+		if len(methodResponse.Params.Param.Value.Array.Data.Value) > 0 {
+			process.HasChildren = true
+		}
+		processList.Items = append(processList.Items, process)
+
+	}
+	c.JSON(http.StatusOK, supervisor.Response{
+		Code:    0,
+		Data:    processList,
+		Message: "主机process列表已解析 0.0",
+	})
+}
+func GetProcessInfo(c *gin.Context) {
+	hostname, ok1 := c.Params.Get("host")
+	if !ok1 {
+		c.String(http.StatusOK, "processname 参数异常")
+		return
+	}
+	host, err := GetHostByHostname(hostname)
+	if err != nil {
+		fmt.Println(err)
+	}
+	processInfoList, err := host.GetAllProcessInfo()
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusOK, supervisor.Response{
+			Code:    0,
+			Data:    nil,
+			Message: "主机GetProcessInfo 有错误 0.0",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, supervisor.Response{
+		Code:    0,
+		Data:    processInfoList,
+		Message: "主机列表加载成功",
+	})
+
 }
 
 func StartProcess(c *gin.Context) {

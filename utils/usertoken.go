@@ -66,6 +66,23 @@ func ValidateToken(tokenString string) (*supervisor.Claims, error) {
 func AuthMiddleware() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
+		// 定义不需要token验证的路径模式
+		skipPaths := []string{
+			"/api/login",
+			"/api/supervisor/process/log/",
+		}
+
+		requestPath := c.Request.URL.Path
+
+		// 检查当前请求路径是否在跳过列表中
+		for _, path := range skipPaths {
+			if strings.HasPrefix(requestPath, path) {
+				// 如果匹配跳过列表中的路径，则直接继续处理请求
+				c.Next()
+				return
+			}
+		}
+
 		// 从请求头中获取 Authorization 字段
 		err, tokenStr := GetToken(c)
 		if err != nil {

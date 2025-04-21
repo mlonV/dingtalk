@@ -37,12 +37,8 @@ type Metrics struct {
 }
 
 var (
-	oldA        = ""
-	oldCNAME    = ""
 	serverCache = make(map[string]map[string]*Metrics)
 	// { server : { domain : cname }}
-
-	// domainCache = make(map[string]string) // Cache to store the last known CNAME for each domain
 )
 
 func init() {

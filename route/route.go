@@ -8,7 +8,7 @@ import (
 	"github.com/mlonV/dingtalk/controller"
 	"github.com/mlonV/dingtalk/controller/super"
 	"github.com/mlonV/dingtalk/prome"
-	// "github.com/mlonV/dingtalk/utils"
+	"github.com/mlonV/dingtalk/utils"
 )
 
 func RegisterRoutes() *gin.Engine {
@@ -52,27 +52,30 @@ func RegisterRoutes() *gin.Engine {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-	g := router.Group("api")
-	g.POST("/login", super.Login)
 
-	// 暂时关闭验证
-	// g.Use(utils.AuthMiddleware())
+	g := router.Group("api", utils.AuthMiddleware())
+	{
+		// denglu
+		g.POST("/login", super.Login)
+		g.GET("/info", super.UserInfo)
+		g.POST("/logout", super.LogOut)
 
-	g.GET("/info", super.UserInfo)
-	g.POST("/logout", super.LogOut)
+		g.GET("/supervisor/list", super.ListHost)
+		g.POST("/supervisor/addhost", super.AddHost)
+		g.DELETE("/supervisor/host/:id", super.DelHost)
+		g.PATCH("/supervisor/host", super.UpdateHost)
 
-	g.GET("/supervisor/list", super.ListHost)
-	g.POST("/supervisor/addhost", super.AddHost)
-	g.DELETE("/supervisor/host/:id", super.DelHost)
-	g.PATCH("/supervisor/host", super.UpdateHost)
+		// g.GET("/supervisor/status", super.GetSupervisorStatus)
+		// g.GET("/supervisor/process/all", super.GetetAllProcessInfo)  // 暂时不用了这个
+		g.GET("/supervisor/process/all", super.GetAllProcessInfo_LazyLoad)
+		g.GET("/supervisor/process/host/:host", super.GetProcessInfo)
 
-	// g.GET("/supervisor/status", super.GetSupervisorStatus)
-	g.GET("/supervisor/process/all", super.GetetAllProcessInfo)
+		// control process
+		g.POST("/supervisor/process/start/host/:host/name/:name", super.StartProcess)
+		g.POST("/supervisor/process/stop/host/:host/name/:name", super.StopProcess)
+		// log
+		g.GET("/supervisor/process/log/host/:host/name/:name", super.TailStdoutLog)
+	}
 
-	// control process
-	g.POST("/supervisor/process/start/host/:host/name/:name", super.StartProcess)
-	g.POST("/supervisor/process/stop/host/:host/name/:name", super.StopProcess)
-	// log
-	g.GET("/supervisor/process/log/host/:host/name/:name", super.TailStdoutLog)
 	return router
 }
