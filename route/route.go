@@ -1,9 +1,6 @@
 package route
 
 import (
-	"time"
-
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/mlonV/dingtalk/controller"
 	"github.com/mlonV/dingtalk/controller/super"
@@ -44,14 +41,7 @@ func RegisterRoutes() *gin.Engine {
 
 	// supervisor
 
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:9528"}, // vue-element-admin 默认端口
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	router.Use(utils.Cors())
 
 	g := router.Group("api", utils.AuthMiddleware())
 	{

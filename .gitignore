@@ -2,7 +2,7 @@
 config.yaml
 .vscode
 
-__debug_bin
+__debug_bin*
 logs
 
 bin

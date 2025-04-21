@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 直接全部加载的
+// 直接全部加载的，先不用这个
 func GetetAllProcessInfo(c *gin.Context) {
 	hosts, err := GetHosts()
 	if err != nil {
