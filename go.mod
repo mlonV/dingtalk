@@ -11,7 +11,9 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-resty/resty/v2 v2.16.5
 	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/larksuite/oapi-sdk-go/v3 v3.4.15
 	github.com/mlonV/tools v1.1.3
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/prometheus/client_golang v1.13.0
