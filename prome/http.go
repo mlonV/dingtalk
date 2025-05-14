@@ -26,5 +26,4 @@ func PromeHTTPFunc() gin.HandlerFunc {
 // 		Name:      "ops_queued",
 // 		Help:      "Number of blob storage operations waiting to be processed.",
 // 	})
-
 // }

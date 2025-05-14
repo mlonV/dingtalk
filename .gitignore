@@ -1,8 +1,7 @@
 *.DS_Store
 config.yaml
 .vscode
-
+build
 __debug_bin*
 logs
-
 bin
