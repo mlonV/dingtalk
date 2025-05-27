@@ -16,11 +16,6 @@ import (
 type AlterController struct {
 }
 
-func (a AlterController) GetIndex(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "瞎访问个什么玩意儿呢？\n 嗯？")
-
-}
-
 func (a AlterController) SendMsg(ctx *gin.Context) {
 
 	alertmanagerMsg := &types.AlertmanagerMsg{}

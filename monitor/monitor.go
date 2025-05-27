@@ -32,7 +32,7 @@ func init() {
 	}
 
 	if config.Conf.DnsQuery.IsOpen {
-		config.Log.Info("开启DNS Query 功能 , isopen: %t", true)
+		config.Log.Info("开启DNS Query 功能 , isopen: %t", config.Conf.DnsQuery.IsOpen)
 		go dnsquery.StartDNSQueryWorker(context.Background())
 	}
 }

@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/mlonV/dingtalk/controller"
+	"github.com/mlonV/dingtalk/controller/search"
 	"github.com/mlonV/dingtalk/controller/super"
 	"github.com/mlonV/dingtalk/prome"
 	"github.com/mlonV/dingtalk/utils"
@@ -13,8 +14,6 @@ func RegisterRoutes() *gin.Engine {
 	router := gin.Default()
 
 	alertController := &controller.AlterController{}
-	router.GET("/", alertController.GetIndex)
-	router.POST("/", alertController.GetIndex)
 
 	router.POST("/sendmsg", alertController.SendMsg)
 
@@ -39,8 +38,13 @@ func RegisterRoutes() *gin.Engine {
 	router.POST("/sentry/text", sc.WebHookForText)
 	router.POST("/sentry/markdown", sc.WebHookForMarkdown)
 
-	// supervisor
+	// DBSearch
+	router.GET("/", search.Index)
+	router.GET("/search/schema/:schema", search.SearchSchemaHandler)
+	router.GET("/search/table/:table", search.SearchTableHandler)
+	router.GET("/search/column/:column", search.SearchColumnHandler)
 
+	// supervisor
 	router.Use(utils.Cors())
 
 	g := router.Group("api", utils.AuthMiddleware())

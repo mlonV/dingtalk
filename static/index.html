@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Database Info Query</title>
+</head>
+<body>
+<h1>Query Database Information</h1>
+<form action="/search/schema" method="post">
+    Schema Name: <input type="text" name="schema">
+    <button type="submit">Search</button>
+</form>
+<br/>
+<form action="/search/table" method="post">
+    Table Name: <input type="text" name="table">
+    <button type="submit">Search</button>
+</form>
+<br/>
+<form action="/search/column" method="post">
+    Column Name: <input type="text" name="column">
+    <button type="submit">Search</button>
+</form>
+</body>
+</html>

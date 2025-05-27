@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .error {
+            color: red;
+            background-color: #ffe6e6;
+            padding: 10px;
+            border-left: 4px solid red;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        a.back-link {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        a.back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Search Results</h1>
+
+{{if .error}}
+    <div class="error">
+        {{ .error }}
+    </div>
+{{end}}
+
+<table>
+    <thead>
+        <tr>
+            <th>Host</th>
+            <th>Database Name (Schema)</th>
+            <th>Table Name</th>
+            <th>Column Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .results}}
+        <tr>
+            <td>{{ .DBInstance }}</td>
+            <td>
+                {{ .Schemas}}
+            </td>
+            <td>{{ .TableName }}</td>
+            <td>{{if .Columns}} {{ .Columns }} {{end}}</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+
+<a href="/" class="back-link">← Back to Search</a>
+
+</body>
+</html>

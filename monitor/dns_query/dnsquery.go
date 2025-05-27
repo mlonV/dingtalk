@@ -41,7 +41,7 @@ var (
 	// { server : { domain : cname }}
 )
 
-func init() {
+func onceInit() {
 	for _, server := range config.Conf.DnsQuery.Servers {
 		serverCache[server] = make(map[string]*Metrics)
 		// 查询A记录的
@@ -142,51 +142,51 @@ func (m *Metrics) queryDNSForMetrics() {
 }
 
 // 使用channel来取消注册
-func (m *Metrics) checkWithChannel() {
-	m.queryDNSForMetrics()
-	m.Register()
-	if m.lastCNAME == "" && m.lastA == "" {
-		m.lastCNAME = m.cname
-		m.lastA = m.arecord
-	}
+// func (m *Metrics) checkWithChannel() {
+// 	m.queryDNSForMetrics()
+// 	m.Register()
+// 	if m.lastCNAME == "" && m.lastA == "" {
+// 		m.lastCNAME = m.cname
+// 		m.lastA = m.arecord
+// 	}
 
-	if m.lastCNAME != m.cname || m.lastA != m.arecord {
-		m.changeCounter++
-		if m.changeCounter >= 5 {
+// 	if m.lastCNAME != m.cname || m.lastA != m.arecord {
+// 		m.changeCounter++
+// 		if m.changeCounter >= 5 {
 
-			// 延迟取消旧指标（异步安全）
-			oldGauge := m.DnsGauge
-			if m.unRegisterCh == nil {
-				m.unRegisterCh = make(chan struct{})
-				go func(m *Metrics) {
-					time.Sleep(time.Duration(config.Conf.DnsQuery.DelayUnregister) * time.Second)
+// 			// 延迟取消旧指标（异步安全）
+// 			oldGauge := m.DnsGauge
+// 			if m.unRegisterCh == nil {
+// 				m.unRegisterCh = make(chan struct{})
+// 				go func(m *Metrics) {
+// 					time.Sleep(time.Duration(config.Conf.DnsQuery.DelayUnregister) * time.Second)
 
-					res := prome.PromeRegister.Unregister(oldGauge)
-					config.Log.Info("unregister result: %v  Server: %s  domain : %s  CName : %s A: %s\n", res, m.server, m.domain, m.cname, m.arecord, m.DnsGauge)
-					// 重新注册一次（解析的IP变化了
+// 					res := prome.PromeRegister.Unregister(oldGauge)
+// 					config.Log.Info("unregister result: %v  Server: %s  domain : %s  CName : %s A: %s\n", res, m.server, m.domain, m.cname, m.arecord, m.DnsGauge)
+// 					// 重新注册一次（解析的IP变化了
 
-					m.unRegisterCh = nil
-				}(m)
-			}
-			m.lastCNAME = m.cname
-			m.lastA = m.arecord
-			m.NewGauge()
-			m.Register()
-			m.changeCounter = 0
+// 					m.unRegisterCh = nil
+// 				}(m)
+// 			}
+// 			m.lastCNAME = m.cname
+// 			m.lastA = m.arecord
+// 			m.NewGauge()
+// 			m.Register()
+// 			m.changeCounter = 0
 
-		}
-		m.DnsGauge.Set(float64(m.changeCounter))
+// 		}
+// 		m.DnsGauge.Set(float64(m.changeCounter))
 
-	} else {
-		if m.changeCounter > 0 {
-			m.changeCounter--
-		}
-		if m.changeCounter == 0 {
-			m.DnsGauge.Set(float64(m.changeCounter))
-		}
-	}
+// 	} else {
+// 		if m.changeCounter > 0 {
+// 			m.changeCounter--
+// 		}
+// 		if m.changeCounter == 0 {
+// 			m.DnsGauge.Set(float64(m.changeCounter))
+// 		}
+// 	}
 
-}
+// }
 
 // 使用锁来取消注册
 func (m *Metrics) check() {
@@ -255,5 +255,6 @@ func worker(ctx context.Context) {
 }
 
 func StartDNSQueryWorker(ctx context.Context) {
-	go worker(ctx)
+	onceInit()
+	worker(ctx)
 }
