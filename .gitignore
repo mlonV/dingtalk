@@ -5,3 +5,4 @@ build
 __debug_bin*
 logs
 bin
+.idea
