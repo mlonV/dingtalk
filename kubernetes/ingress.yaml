@@ -1,0 +1,53 @@
+# # kubectl create secret tls dingtalk-tls --cert=/Users/apple/Downloads/test-train.chklang.com.pem --key=/Users/apple/Downloads/test-train.chklang.com.key -n dev
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dingtalk
+  namespace: dev
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"  # 禁用默认的 HTTPS 重定向
+spec:
+  ingressClassName: nginx  # 确保与 NGINX Ingress Class 匹配
+  tls:
+  - hosts:
+    - test-train.chklang.com
+    secretName: dingtalk-tls
+  rules:
+  - host: test-train.chklang.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dingtalk
+            port:
+              number: 80
+
+# # traefik/ingress.yaml  # traefik配置 http/https都可用
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: dingtalk
+#   namespace: dev
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /
+#     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure  # 指定使用安全入口点
+# # kubectl create secret tls dingtalk-tls --cert=/Users/apple/Downloads/test-train.chklang.com.pem --key=/Users/apple/Downloads/test-train.chklang.com.key -n dev
+# spec:
+#   ingressClassName: traefik  # 确保你的 Ingress Controller 支持此 className
+#   tls:
+#   - hosts:
+#     - test-train.chklang.com
+#     secretName: dingtalk-tls  # 引用之前创建的 Secret
+#   rules:
+#   - host: test-train.chklang.com
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: dingtalk
+#             port:
+#               number: 80

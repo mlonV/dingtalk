@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/mlonV/dingtalk/controller"
+	"github.com/mlonV/dingtalk/controller/host"
 	"github.com/mlonV/dingtalk/controller/search"
 	"github.com/mlonV/dingtalk/controller/super"
 	"github.com/mlonV/dingtalk/prome"
@@ -24,6 +25,9 @@ func RegisterRoutes() *gin.Engine {
 	router.POST("/-/reload", controller.ReloadConfig)
 	// help 接口
 	router.GET("/help", controller.Help)
+
+	// 查看本机器启动主机名字
+	router.GET("/hostname", host.Hostname)
 
 	// 注册prometheus的监控指标
 	router.GET("/metrics", prome.PromeHTTPFunc())

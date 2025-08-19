@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dingtalk
+  namespace: dev
+  labels:
+    app: dingtalk
+spec:
+  revisionHistoryLimit: 4
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dingtalk
+  template:
+    metadata:
+      labels:
+        app: dingtalk
+    spec:
+      containers:
+        - name: dingtalk
+          image: harbor.karawangroup.com/test/dingtalk:v2025080801
+          ports:
+            - containerPort: 8080
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "echo Hello from the postStart handler11111 > /data/volume/preStart-`hostname`"]
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "nginx -s quit; while killall -0 dingtalk; do sleep 1;touch /data/volume/preStop-`hostname`; done"]
+          resources:
+            requests:
+              cpu: "200m"  # 请求 200 毫核 CPU
+            limits:
+              cpu: "500m" 
+          volumeMounts:
+          - mountPath: "/data/volume"
+            name: mac-volume
+      imagePullSecrets:
+      - name: harbor.karawangroup.com
+      volumes:
+      - name: mac-volume
+        hostPath:
+          path: /data/volume
+          type: Directory 

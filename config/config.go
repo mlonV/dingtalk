@@ -39,6 +39,7 @@ func initConfig() {
 
 func initLog() {
 	// 初始化全局打印日志，获取config.yaml配置文件里面的设置引用到Log
+	os.Mkdir(Conf.LogSet.FilePath, os.ModeDir)
 	Log = loger.NewLoger(
 		&loger.Loger{
 			ToFile:          Conf.LogSet.ToFile,
